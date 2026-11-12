@@ -16,6 +16,8 @@ export interface AppConfig {
   appTimezone: string;
   seedDemoPassword: string;
   appEnv: string;
+  port: number;
+  host: string;
 }
 
 const required = (name: string): string => {
@@ -48,6 +50,11 @@ export const loadConfig = (): AppConfig => {
     throw new Error('DATABASE_URL must be a valid connection URL.');
   }
 
+  const port = Number(process.env.PORT?.trim() || '3000');
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    throw new Error('PORT must be a valid TCP port.');
+  }
+
   return {
     sessionSecret: required('SESSION_SECRET'),
     databaseUrl,
@@ -55,5 +62,7 @@ export const loadConfig = (): AppConfig => {
     appTimezone,
     seedDemoPassword: required('SEED_DEMO_PASSWORD'),
     appEnv: process.env.APP_ENV?.trim() || 'development',
+    port,
+    host: process.env.HOST?.trim() || '0.0.0.0',
   };
 };
