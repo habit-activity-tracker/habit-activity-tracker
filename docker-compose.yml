@@ -6,11 +6,58 @@ services:
       POSTGRES_PASSWORD: habit
       POSTGRES_DB: habit_tracker
     ports:
-      - "5433:5432"
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U habit -d habit_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # This one-off service applies migrations and inserts the demo baseline before
+  # the app starts. Existing goals and records are never deleted by this command.
+  migrate:
+    build:
+      context: .
+    command: ["node", "api/dist/src/seed/seed.js"]
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      DATABASE_URL: postgresql://habit:habit@postgres:5432/habit_tracker
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      SESSION_TTL: ${SESSION_TTL:?Set SESSION_TTL in .env}
+      APP_TIMEZONE: ${APP_TIMEZONE:?Set APP_TIMEZONE in .env}
+      SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:?Set SEED_DEMO_PASSWORD in .env}
+      # Local Compose uses HTTP. Deployments retain secure cookies by default.
+      SESSION_COOKIE_SECURE: "false"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build:
+      context: .
+    environment:
+      APP_ENV: production
+      NODE_ENV: production
+      DATABASE_URL: postgresql://habit:habit@postgres:5432/habit_tracker
+      SESSION_SECRET: ${SESSION_SECRET:?Set SESSION_SECRET in .env}
+      SESSION_TTL: ${SESSION_TTL:?Set SESSION_TTL in .env}
+      APP_TIMEZONE: ${APP_TIMEZONE:?Set APP_TIMEZONE in .env}
+      SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:?Set SEED_DEMO_PASSWORD in .env}
+      # Local Compose uses HTTP. Deployments retain secure cookies by default.
+      SESSION_COOKIE_SECURE: "false"
+      PORT: 3000
+      HOST: 0.0.0.0
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "${HOST_PORT:-8080}:3000"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then((response) => process.exit(response.ok ? 0 : 1)).catch(() => process.exit(1))"]
       interval: 5s
       timeout: 5s
       retries: 10

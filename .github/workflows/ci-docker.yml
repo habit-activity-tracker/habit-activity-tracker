@@ -1,0 +1,80 @@
+name: CI & Docker Build
+
+on:
+  workflow_call:
+  pull_request:
+    branches: [main, lab5-staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-docker:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: habit
+          POSTGRES_PASSWORD: habit
+          POSTGRES_DB: habit_tracker
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U habit -d habit_tracker"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      APP_ENV: test
+      NODE_ENV: test
+      SESSION_SECRET: ci-session-secret-not-for-production
+      DATABASE_URL: postgresql://habit:habit@localhost:5432/habit_tracker
+      TEST_DATABASE_URL: postgresql://habit:habit@localhost:5432/habit_tracker_test
+      SESSION_TTL: 24
+      APP_TIMEZONE: Asia/Bangkok
+      SEED_DEMO_PASSWORD: ci-demo-password-not-for-production
+      PORT: 3000
+      HOST: 0.0.0.0
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js 24
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "24"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create isolated test database
+        env:
+          PGPASSWORD: habit
+        run: |
+          psql -h localhost -U habit -d habit_tracker -c "CREATE DATABASE habit_tracker_test"
+
+      - name: Migrate and seed application database
+        run: |
+          npm run migrate
+          npm run seed
+
+      - name: Run automated tests
+        run: npm test
+
+      - name: Build application
+        run: npm run build
+
+      - name: Build production Docker image
+        run: docker build --tag habit-activity-tracker:ci .
