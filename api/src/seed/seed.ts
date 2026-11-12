@@ -5,6 +5,8 @@ import { closePool, getPool } from '../db/pool.js';
 import { runMigrations } from '../db/migrate.js';
 import { loadConfig } from '../config/env.js';
 
+// Insert-only: re-running never resets passwords or edited templates, so a seed
+// (or a redeploy) cannot overwrite data users and managers created later.
 export const runSeed = async (): Promise<void> => {
   const pool = getPool();
   await runMigrations(pool);
@@ -19,8 +21,7 @@ export const runSeed = async (): Promise<void> => {
     await pool.query(
       `INSERT INTO users (email, password_hash, role, is_active)
        VALUES ($1, $2, $3, true)
-       ON CONFLICT ((lower(email))) DO UPDATE
-       SET password_hash = EXCLUDED.password_hash, role = EXCLUDED.role, is_active = true, updated_at = now()`,
+       ON CONFLICT ((lower(email))) DO NOTHING`,
       [email, passwordHash, role]
     );
   }
@@ -29,7 +30,7 @@ export const runSeed = async (): Promise<void> => {
   if (!managerId) throw new Error('Seed Program Manager was not created.');
   const templates = [['Study Time', 'minutes', 1, 720, true], ['Pages Read', 'pages', 1, 300, true], ['Meditation', 'minutes', 1, 120, false]] as const;
   for (const [name, unit, minValue, maxValue, isActive] of templates) {
-    await pool.query(`INSERT INTO activity_templates (name, unit, min_value, max_value, is_active, created_by) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (name) DO UPDATE SET unit = EXCLUDED.unit, min_value = EXCLUDED.min_value, max_value = EXCLUDED.max_value, is_active = EXCLUDED.is_active, updated_at = now()`, [name, unit, minValue, maxValue, isActive, managerId]);
+    await pool.query(`INSERT INTO activity_templates (name, unit, min_value, max_value, is_active, created_by) VALUES ($1, $2, $3, $4, $5, $6) ON CONFLICT (name) DO NOTHING`, [name, unit, minValue, maxValue, isActive, managerId]);
   }
 };
 
