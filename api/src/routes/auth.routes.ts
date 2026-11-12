@@ -6,10 +6,14 @@ import { AppError, ErrorCode } from '../errors.js';
 import { requireAuth, sessionCookieName } from '../middleware/auth.js';
 import { AuthService } from '../services/auth.service.js';
 
+const secureCookies = (config: AppConfig): boolean =>
+  process.env.SESSION_COOKIE_SECURE === 'true' ||
+  (process.env.SESSION_COOKIE_SECURE !== 'false' && (process.env.NODE_ENV === 'production' || config.appEnv === 'production'));
+
 const safeCookieOptions = (config: AppConfig, maxAge?: number) => ({
   httpOnly: true,
   sameSite: 'lax' as const,
-  secure: process.env.NODE_ENV === 'production' || config.appEnv === 'production',
+  secure: secureCookies(config),
   ...(maxAge === undefined ? {} : { maxAge }),
 });
 

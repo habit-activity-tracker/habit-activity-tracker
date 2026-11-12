@@ -1,0 +1,16 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+**/node_modules
+dist
+**/dist
+coverage
+playwright-report
+test-results
+*.log
+*.txt
+.DS_Store
+docs
+e2e

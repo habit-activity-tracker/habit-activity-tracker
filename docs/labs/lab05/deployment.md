@@ -4,7 +4,7 @@ This document records the deployment configuration for the Habit & Activity Trac
 
 ## Stack
 
-The application is a Node.js/Express API, a Vite/React web client, and PostgreSQL. In the Issue #2 baseline, Docker Compose runs only PostgreSQL; the API and web client are run with the npm scripts. The Docker application services are intentionally deferred to Issue #3. The API stores sessions and application data in PostgreSQL; no application state is written to the container filesystem.
+The application is a Node.js/Express API, a Vite/React web client, and PostgreSQL. Docker Compose builds one multi-stage application image: Express serves the compiled React UI and the API, while a separate one-off `migrate` service applies migrations and seeds the demo baseline. This adapts the Issue #3 guide's separate API/web Dockerfiles to this app's single-origin architecture. The API stores sessions and application data in PostgreSQL; no application state is written to the container filesystem.
 
 The planned GCP stack is Artifact Registry, Cloud Run for the API and web service, Cloud SQL for PostgreSQL, and Secret Manager for runtime secrets. Resource names must be filled in after the team creates them; do not commit secret values here.
 
@@ -19,6 +19,7 @@ The planned GCP stack is Artifact Registry, Cloud Run for the API and web servic
 | `TEST_DATABASE_URL` | Isolated database used by API tests | Yes | Test-only local/CI secret |
 | `SESSION_TTL` | Session lifetime in hours | No | `.env` or deployment configuration |
 | `SESSION_MAX_AGE_HOURS` | Backward-compatible alias for `SESSION_TTL` | No | Only for existing environments |
+| `SESSION_COOKIE_SECURE` | Force secure session cookies when `true`; local Compose sets it to `false` for HTTP | No | Deployment configuration only |
 | `APP_TIMEZONE` | IANA timezone used for calendar rules | No | `.env` or deployment configuration |
 | `SEED_DEMO_PASSWORD` | Local demo seed password | Yes | Local `.env`; never committed or shown in evidence |
 | `PORT` | API listen port | No | `.env` or Cloud Run-provided value |
@@ -46,8 +47,14 @@ After Issue #3 adds the application containers, fill only the local placeholder 
 ```sh
 docker compose up --build -d
 docker compose ps -a
-curl --fail http://localhost:3000/api/health
-curl --fail http://localhost:3000/api/ready
+curl --fail http://localhost:8080/api/health
+curl --fail http://localhost:8080/api/ready
+```
+
+The default host ports are `8080` for the application and `5433` for PostgreSQL. If either is already occupied, choose alternatives without changing the Compose file:
+
+```sh
+HOST_PORT=8081 POSTGRES_HOST_PORT=5434 docker compose up --build -d
 ```
 
 The `postgres_data` volume is the persistence boundary. `docker compose down` keeps it; do not use `docker compose down -v` when testing persistence.
