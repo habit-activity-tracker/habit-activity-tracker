@@ -1,5 +1,7 @@
 import cookieParser from 'cookie-parser';
 import express, { Express } from 'express';
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import type { Pool } from 'pg';
 import { loadConfig } from './config/env.js';
 import { getPool } from './db/pool.js';
@@ -38,6 +40,21 @@ export const createApp = (pool: Pool = getPool(), clock: Clock = systemClock): E
   app.use('/api/goals', goalsRouter);
   app.use('/api/goals/:id/records', createRecordsRouter(pool, loadConfig(), clock));
   app.use('/api/goals/:id/progress', createProgressRouter(pool, loadConfig()));
+
+  // Docker supplies the compiled React bundle here. Keeping this opt-in means
+  // API tests and local Vite development continue to use their usual setup.
+  const webDistDir = process.env.WEB_DIST_DIR;
+  if (webDistDir && existsSync(webDistDir)) {
+    app.use(express.static(resolve(webDistDir)));
+    app.use((request, response, next) => {
+      if (request.method !== 'GET' || request.path === '/api' || request.path.startsWith('/api/')) {
+        next();
+        return;
+      }
+      response.sendFile('index.html', { root: resolve(webDistDir) });
+    });
+  }
+
   app.use(notFoundHandler);
   app.use(errorHandler);
 
