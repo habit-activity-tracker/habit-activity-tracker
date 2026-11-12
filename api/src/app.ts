@@ -16,6 +16,19 @@ export const createApp = (pool: Pool = getPool(), clock: Clock = systemClock): E
   app.use(express.json());
   app.use(cookieParser());
 
+  app.get('/api/health', (_request, response) => {
+    response.status(200).json({ status: 'ok' });
+  });
+
+  app.get('/api/ready', async (_request, response) => {
+    try {
+      await pool.query('SELECT 1');
+      response.status(200).json({ status: 'ready' });
+    } catch {
+      response.status(503).json({ status: 'not_ready' });
+    }
+  });
+
   app.use('/api/auth', createAuthRouter(pool, loadConfig()));
   app.use('/api', createCurrentUserRouter(pool, loadConfig()));
   const templatesRouter = createTemplatesRouter(pool, loadConfig());
