@@ -24,6 +24,7 @@ The GCP stack is Artifact Registry, one Cloud Run service serving both the API a
 | `SEED_DEMO_PASSWORD` | Local demo seed password | Yes | Local `.env`; never committed or shown in evidence |
 | `PORT` | API listen port | No | `.env` or Cloud Run-provided value |
 | `HOST` | API bind address | No | `.env`; use `0.0.0.0` in containers |
+| `WEB_DIST_DIR` | Production path for the compiled React bundle served by Express | No | Dockerfile runtime default `/app/web/dist` |
 
 `.env` is ignored by Git. Only placeholder values belong in `.env.example`. Before every commit, check `git status` and `git diff --cached` for secrets.
 
@@ -105,7 +106,48 @@ The first automatic deployment completed successfully after merge commit `6b610b
 | Public URL | `https://habit-tracker-tn5ktplddq-as.a.run.app` |
 | Smoke test | Passed: health, readiness, UI, and unauthenticated API check |
 
-For the second release, repeat the procedure above, then record its release SHA, immutable digest, revision with 100% traffic, and confirmation that the Lab 5 release banner appears at the public URL before and after sign-in.
+## Verified release pair for Issue #8
+
+Release A and Release B were both deployed successfully and were used to verify persistence across rollback and roll-forward.
+
+| Release | Commit SHA | Immutable image digest | Verification |
+| --- | --- | --- | --- |
+| A | `6b610b04ced97dd681c81128a83206eb0385669d` | `sha256:2c4a8ee974d28a170db31dbe3c7ec6e11306156c72bb251b8cfcdb77f8ee783c` | Ready, 100% traffic, smoke test passed |
+| B | `d99e4f681df3d432b382ccc48b06c1b3227ab925` | `sha256:e83edc8a96615f96d2043e5ab9d804af2f1f0621d1891821246c461ec8da5eab` | Ready, 100% traffic, smoke test passed |
+
+Rollback to Release A and roll-forward to Release B both preserved the same goal and daily record. The duplicate-record rule was also verified before rollback. The related workflow runs are [rollback run #3](https://github.com/habit-activity-tracker/habit-activity-tracker/actions/runs/43397228496) and [roll-forward run #4](https://github.com/habit-activity-tracker/habit-activity-tracker/actions/runs/43398115548).
+
+## Cloud-readiness checklist
+
+1. **Uploaded files:** This Sprint 1 application has no upload feature and no local-folder upload path. Application state is stored in PostgreSQL, not in the container filesystem.
+2. **Production-safe seed:** `api/src/seed/seed.ts` reads `SEED_DEMO_PASSWORD` from environment configuration, hashes it with bcrypt, and uses idempotent upserts. Passwords are not rendered or logged.
+3. **No production dev shortcuts:** The login page has only email/password fields. There is no user picker, impersonation shortcut, or default password in the UI.
+4. **Database sessions:** `api/src/services/auth.service.ts` stores and reads sessions from PostgreSQL's `sessions` table; sessions are not kept in server memory.
+5. **Cloud Run port contract:** `api/src/config/env.ts` reads and validates `PORT`, defaults `HOST` to `0.0.0.0`, and `api/src/server.ts` passes both values to `listen()`.
+6. **Readiness:** `GET /api/ready` runs `SELECT 1`, returns `200` when PostgreSQL is reachable, and returned `503 {"status":"not_ready"}` during the verified local database-stop test.
+
+## Definition of Done (Handout Section 11)
+
+- [x] A fresh clone builds and runs; settings come from environment variables and no secret is in the repository, image, logs, or evidence.
+- [x] The public URL serves the latest release from `main`, and the running commit is identifiable by the full SHA and image digest.
+- [x] Data survived rollback to Release A and roll-forward to Release B.
+- [x] CI runs on PRs into `lab5-staging` and `main`; the intentionally failing C-02 PR was blocked by the required check.
+- [x] The latest releases reached `main` through reviewed PRs and were deployed by the workflow.
+- [x] The repository is public and remains public through grading.
+- [x] This deployment guide and the evidence index are complete; both members participated in implementation, review, testing, and deployment.
+- [ ] Evidence PDF submitted on LEB2. This submission step is intentionally outside this documentation change.
+
+## Evidence index
+
+| Rubric part | Evidence | What it proves |
+| --- | --- | --- |
+| Part 0: Team and evidence index | Public repository, public service URL above, contribution table in the PDF, and this evidence index | Team identity, repository/release identity, public URL, and evidence mapping |
+| Part 1: CI and quality gate | [CI PR #45](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/45), [C-02 PR #52](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/52), [CI workflow](../../../.github/workflows/ci-docker.yml) | Passing PR checks and a failing required check that blocked merge |
+| Part 2: Docker and reproducible configuration | [Docker PR #44](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/44), `.env.example`, `Dockerfile`, `.dockerignore` | Clean Docker build, environment configuration, and no committed secret |
+| Part 3: GCP deployment and persistence | [First deployment PR #51](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/51), public URL above, Release A/B table, rollback/roll-forward runs | Public UI/API/database operation and persistence across redeployments |
+| Part 4: Repeatable release pipeline | [Workflow release PR #55](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/55), [deployment-proof PR #56](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/56), [release PR #58](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/58), `deploy.yml`, `release.sh` | Reviewed staging-to-main releases, workflow deployment, commit/digest traceability |
+
+Screenshots belong beside the corresponding evidence in the final PDF. Each screenshot must have a numbered caption identifying the check/requirement, commit/run/URL, and must not show passwords, secret values, connection strings, or key files.
 
 ## Issue #2 evidence
 
