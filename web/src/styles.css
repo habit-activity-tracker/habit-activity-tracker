@@ -20,6 +20,8 @@ p { margin: 0 0 .75rem; }
 .header-user { display: flex; align-items: center; gap: .75rem; font-size: .9rem; color: var(--muted); }
 .role-badge { padding: .1rem .55rem; border-radius: 999px; background: var(--primary-soft); color: var(--primary);
   font-size: .75rem; font-weight: 600; text-transform: capitalize; }
+.release-badge { padding: .1rem .55rem; border-radius: 999px; background: var(--success-soft); color: var(--success);
+  font-size: .75rem; font-weight: 700; white-space: nowrap; }
 
 /* Layout */
 .container { max-width: 1120px; margin: 0 auto; padding: 1.5rem; }
@@ -104,3 +106,5 @@ tbody tr:last-child td { border-bottom: 0; }
 .login-card { width: 100%; max-width: 400px; }
 .login-card h1 { color: var(--primary); text-align: center; }
 .login-card h2 { text-align: center; color: var(--muted); font-weight: 500; margin-bottom: 1.25rem; }
+.release-banner { margin: -.5rem 0 1.25rem; padding: .45rem .6rem; border-radius: 8px; text-align: center;
+  color: var(--success); background: var(--success-soft); font-size: .82rem; font-weight: 700; }
