@@ -16,6 +16,7 @@ export const LoginPage = ({ onSuccess }: { onSuccess: (user: User) => void }) =>
 
   return <main className="login-wrap"><div className="card login-card">
     <h1>Habit &amp; Activity Tracker</h1><h2>Sign in</h2>
+    <p className="release-banner" role="status">🚀 Lab 5 Release: Continuous Deployment Active</p>
     <form onSubmit={submit} aria-label="Login form">
       <label htmlFor="email">Email</label>
       <input id="email" name="email" type="email" autoComplete="username" value={email} onChange={(event) => setEmail(event.target.value)} required />
