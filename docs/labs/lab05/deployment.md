@@ -24,6 +24,7 @@ The GCP stack is Artifact Registry, one Cloud Run service serving both the API a
 | `SEED_DEMO_PASSWORD` | Local demo seed password | Yes | Local `.env`; never committed or shown in evidence |
 | `PORT` | API listen port | No | `.env` or Cloud Run-provided value |
 | `HOST` | API bind address | No | `.env`; use `0.0.0.0` in containers |
+| `WEB_DIST_DIR` | Production path for the compiled React bundle served by Express | No | Dockerfile runtime default `/app/web/dist` |
 
 `.env` is ignored by Git. Only placeholder values belong in `.env.example`. Before every commit, check `git status` and `git diff --cached` for secrets.
 
@@ -140,6 +141,7 @@ Rollback to Release A and roll-forward to Release B both preserved the same goal
 
 | Rubric part | Evidence | What it proves |
 | --- | --- | --- |
+| Part 0: Team and evidence index | Public repository, public service URL above, contribution table in the PDF, and this evidence index | Team identity, repository/release identity, public URL, and evidence mapping |
 | Part 1: CI and quality gate | [CI PR #45](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/45), [C-02 PR #52](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/52), [CI workflow](../../../.github/workflows/ci-docker.yml) | Passing PR checks and a failing required check that blocked merge |
 | Part 2: Docker and reproducible configuration | [Docker PR #44](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/44), `.env.example`, `Dockerfile`, `.dockerignore` | Clean Docker build, environment configuration, and no committed secret |
 | Part 3: GCP deployment and persistence | [First deployment PR #51](https://github.com/habit-activity-tracker/habit-activity-tracker/pull/51), public URL above, Release A/B table, rollback/roll-forward runs | Public UI/API/database operation and persistence across redeployments |
