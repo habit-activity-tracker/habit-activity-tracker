@@ -6,7 +6,7 @@ This document records the deployment configuration for the Habit & Activity Trac
 
 The application is a Node.js/Express API, a Vite/React web client, and PostgreSQL. Docker Compose builds one multi-stage application image: Express serves the compiled React UI and the API, while a separate one-off `migrate` service applies migrations and seeds the demo baseline. This adapts the Issue #3 guide's separate API/web Dockerfiles to this app's single-origin architecture. The API stores sessions and application data in PostgreSQL; no application state is written to the container filesystem.
 
-The planned GCP stack is Artifact Registry, Cloud Run for the API and web service, Cloud SQL for PostgreSQL, and Secret Manager for runtime secrets. Resource names must be filled in after the team creates them; do not commit secret values here.
+The GCP stack is Artifact Registry, one Cloud Run service serving both the API and web UI, a Cloud Run migration job, Cloud SQL for PostgreSQL, and Secret Manager for runtime secrets. Do not commit secret values here.
 
 ## Environment variables
 
@@ -61,27 +61,51 @@ The `postgres_data` volume is the persistence boundary. `docker compose down` ke
 
 ## GCP release record
 
-Fill these identifiers from the team's actual GCP project and deployment after Issue #1/Issue #5. Do not invent them in evidence:
+Identifiers from the team's verified GCP deployment:
 
 | Item | Value |
 | --- | --- |
-| GCP project ID | `TODO: team project ID` |
-| Region | `TODO: e.g. asia-southeast1` |
-| Artifact Registry repository | `TODO` |
-| Cloud Run API service | `TODO` |
-| Cloud Run web service | `TODO` |
-| Cloud SQL instance/database | `TODO` |
-| Public URL | `TODO` |
+| GCP project ID | `cpe334-sec31-ctrl-c-chaya-lab` |
+| Region | `asia-southeast1` |
+| Artifact Registry repository | `habit-tracker` |
+| Cloud Run service | `habit-tracker` (single-origin container serving API & UI) |
+| Cloud Run migration job | `habit-tracker-migrate` |
+| Cloud SQL instance/database | `habit-tracker-pg` / `habit_tracker` |
+| Public URL | `https://habit-tracker-tn5ktplddq-as.a.run.app` |
 
-## Release procedure
+## Release procedure & How to identify running commit
 
 1. Create a feature branch from `lab5-staging` for the Issue.
-2. Run the build and automated tests locally.
-3. Open a PR into `lab5-staging`, add label `lab5`, and request a specific review from the teammate. The author does not approve their own PR.
+2. Run the build and automated tests locally (`npm test`, `npm run build`).
+3. Open a PR into `lab5-staging`, add label `lab5`, and request teammate review. The author does not approve their own PR (Rule R-09).
 4. After review and passing CI, merge into `lab5-staging`.
 5. Open a release PR from `lab5-staging` into `main`, request teammate approval, and merge only after required checks pass.
-6. The deploy workflow runs only from `main`, tags the image with the full commit SHA, runs migrations as a separate step, deploys the service, and performs a read-only smoke test.
-7. Record the release commit SHA, workflow run URL, image digest, and Cloud Run revision in the evidence index. The running commit is identified from the workflow summary and Cloud Run revision metadata.
+6. The GitHub Actions deploy workflow (`.github/workflows/deploy.yml`) triggers automatically on push to `main`:
+   - Runs `test-and-docker` CI check.
+   - Authenticates to GCP keylessly via Workload Identity Federation (WIF).
+   - Builds container image tagged with the full 40-character commit SHA (`$IMAGE_TAG`).
+   - Resolves immutable image digest from Artifact Registry.
+   - Updates and executes Cloud Run migration job (`habit-tracker-migrate`).
+   - Deploys Cloud Run service (`habit-tracker`) with traffic shifted 100% to latest revision.
+   - Runs public smoke test (`deploy/smoke_test.py`) against `$SERVICE_URL`.
+7. **How to identify the running commit on Cloud Run:**
+   - In the GitHub Actions Step Summary, note `Commit image tag: <SHA>` and the immutable `Digest: <DIGEST>`.
+   - In GCP Console, open Cloud Run → `habit-tracker` → **Revisions**. The revision receiving 100% traffic must use that same image digest (and its image tag is the same full `<SHA>`).
+   - This image tag/digest pair is the source of truth for the running commit; compare the SHA with the merge commit on `main`.
+
+## Verified first automated release
+
+The first automatic deployment completed successfully after merge commit `6b610b04ced97dd681c81128a83206e0b385669d` reached `main`.
+
+| Item | Verified value |
+| --- | --- |
+| Workflow run | [Deploy demo run #43387891834](https://github.com/habit-activity-tracker/habit-activity-tracker/actions/runs/43387891834) |
+| Image tag / release commit | `6b610b04ced97dd681c81128a83206e0b385669d` |
+| Immutable image digest | `asia-southeast1-docker.pkg.dev/cpe334-sec31-ctrl-c-chaya-lab/habit-tracker/habit-tracker@sha256:2c4a8ee974d28a170db31dbe3c7ec6e11306156c72bb251b8cfcdb77f8ee783c` |
+| Public URL | `https://habit-tracker-tn5ktplddq-as.a.run.app` |
+| Smoke test | Passed: health, readiness, UI, and unauthenticated API check |
+
+For the second release, repeat the procedure above, then record its release SHA, immutable digest, revision with 100% traffic, and confirmation that the Lab 5 release banner appears at the public URL before and after sign-in.
 
 ## Issue #2 evidence
 
