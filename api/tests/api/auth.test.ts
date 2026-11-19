@@ -43,6 +43,15 @@ describe('F-01 authentication and current user', () => {
     expect(wrongPassword.body).toEqual(unknownUser.body);
   });
 
+  it('TEST-01.8 / AC-02a rejects malformed email with HTTP 400', async () => {
+    const response = await request(createApp(pool))
+      .post('/api/auth/login')
+      .send({ email: 'abc', password });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error.code).toBe('INVALID_LOGIN_REQUEST');
+  });
+
   it('TEST-01.3 / AC-01.3 returns the current user and rejects the session after logout', async () => {
     const agent = request.agent(createApp(pool));
     await agent.post('/api/auth/login').send({ email: 'alice@example.com', password }).expect(200);
