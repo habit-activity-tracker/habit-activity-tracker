@@ -24,7 +24,8 @@ export const createAuthRouter = (pool: Pool, config: AppConfig): Router => {
   router.post('/login', async (request, response, next) => {
     try {
       const { email, password } = request.body ?? {};
-      if (typeof email !== 'string' || typeof password !== 'string' || !email.trim() || !password) {
+      const isValidEmail = typeof email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+      if (!isValidEmail || typeof password !== 'string' || !password) {
         throw new AppError(400, ErrorCode.INVALID_LOGIN_REQUEST, 'Email and password are required.');
       }
       const result = await authService.login(email, password);
