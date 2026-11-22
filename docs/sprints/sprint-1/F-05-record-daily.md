@@ -12,11 +12,25 @@ An authenticated Participant submits a quantity and a calendar date for one of t
 
 The same calendar date may be recorded for two different goals, including two goals using the same template, because the uniqueness scope is the goal, not the template or participant.
 
+## Revision history
+
+| Version | Date | Issue | Change |
+|---|---|---|---|
+| v1.0 | Sprint 1 (`v0.1.1-sprint1`) | n/a | Original rule |
+| v1.1 | 2026-11-22 | #75 | Add 7-day retrospective cutoff (`AC-12a`) |
+| v1.1.1 | 2026-11-22 | #75 follow-up / parent #73 | Clarify date-before-duplicate validation with `TEST-12.1i` |
+
+## Domain rule: activity date
+
+**v1.1 (current):** `activity_date` is interpreted in `APP_TIMEZONE`. It must be (1) not in the future, (2) within the goal's inclusive `start_date` to `end_date`, and (3) no more than 7 calendar days before today. Violations return `400 INVALID_ACTIVITY_DATE`.
+
+**v1.0 (superseded, kept for history):** `activity_date` is interpreted in `APP_TIMEZONE`, must not be in the future, and must be within the goal's inclusive period. There is no retrospective-age cutoff.
+
 ## Domain rules and validation
 
 - The goal must belong to the current Participant. Program Managers and other Participants cannot record against it.
 - `activity_date` is a calendar date interpreted in `APP_TIMEZONE`, default `Asia/Bangkok`; timestamps are stored in UTC.
-- The date must be today or earlier and within the goal's inclusive `start_date`/`end_date`.
+- The date must be today or earlier, within the goal's inclusive `start_date`/`end_date`, and no more than 7 calendar days before today.
 - `quantity` must be numeric, non-negative where the template permits it, and within the template's inclusive `min_value`/`max_value`.
 - The database enforces unique `(goal_id, activity_date)` as the final duplicate guard.
 - A duplicate returns 409 and leaves the original quantity unchanged.
@@ -76,6 +90,7 @@ The participant record form shows the template unit and valid range, defaults th
 | AC-10 | A Participant cannot create a record for another Participant's goal and receives no private data. |
 | AC-11 | A future date is rejected using Asia/Bangkok calendar semantics. |
 | AC-12 | A date outside the inclusive goal period is rejected. |
+| AC-12a | An owner Participant can create records dated today through 7 calendar days ago inside the goal period; a date 8 or more days old is rejected with `400 INVALID_ACTIVITY_DATE`. Existing records are unaffected. |
 | AC-13 | Quantities at the inclusive template bounds are accepted; values outside them are rejected. |
 | AC-14 | A second record for the same goal/date returns 409 and the first quantity remains unchanged. |
 | AC-15 | Two goals on one template can each have a record for the same date without collision. |
@@ -90,6 +105,9 @@ The participant record form shows the template unit and valid range, defaults th
 | TEST-10 | AC-10 | API validation/authorization | Participant A session and B's goal. | POST using B's goal ID. | 404 `GOAL_NOT_FOUND`; no B data. |
 | TEST-11 | AC-11 | API validation/authorization | Tomorrow generated in `Asia/Bangkok`. | POST future date. | 400 `INVALID_ACTIVITY_DATE`. |
 | TEST-12 | AC-12 | API validation/authorization | Goal start/end known. | POST before start and after end. | 400 `INVALID_ACTIVITY_DATE`; no row stored. |
+| TEST-12.1 | AC-12a | API validation/authorization | Owner Participant; goal started at least 8 days ago; clock uses `APP_TIMEZONE`. | POST today, today minus 7 calendar days, today minus 8 calendar days, and tomorrow. | Today and minus 7 return 201; minus 8 and tomorrow return 400 `INVALID_ACTIVITY_DATE`. |
+| TEST-12.1f | AC-12a, AC-14 | API/database integration | Existing record for the same goal at today minus 7 calendar days. | POST another record for that same goal/date. | 409 `DUPLICATE_DAILY_RECORD`; original quantity unchanged. |
+| TEST-12.1i | AC-12a, AC-14 | API/database integration | Existing record is inserted directly for the same goal at today minus 8 calendar days; owner Participant submits the same old date. | POST the same goal/date again. | 400 `INVALID_ACTIVITY_DATE`; date validation precedes duplicate detection. |
 | TEST-13 | AC-13 | API validation/authorization | Inclusive template range `[0, 500]`. | Submit 0, 500, -0.01, 500.01. | Bounds accepted; outside rejected with 400 `INVALID_QUANTITY`. |
 | TEST-13a | AC-13 | Unit | Template range `[0, 500]` and decimal validator. | Evaluate 0, 500, -0.01, and 500.01 without HTTP/database dependencies. | Validator accepts inclusive bounds and rejects outside values. |
 | TEST-14 | AC-14 | API/database integration | One row exists for goal/date. | POST second quantity. | 409 `DUPLICATE_DAILY_RECORD`; original unchanged. |

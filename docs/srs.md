@@ -35,7 +35,7 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | FR-09 | A Participant shall record a daily activity value for their goal. | Record creation test with valid input. | S1 |
 | FR-10 | The system shall enforce one entry per goal per calendar day, rejecting duplicates without overwriting the original. | Duplicate-record test and database constraint test. | S1 |
 | FR-11 | The system shall calculate progress as total recorded quantity divided by the goal target times 100, rounded to one decimal place and capped at 100. | Calculation table/unit tests. | S1 |
-| FR-12 | The system shall reject records with values outside the template range, future dates, dates outside the goal period, or dates not interpreted in `APP_TIMEZONE`. | Validation boundary tests. | S1 |
+| FR-12 | The system shall reject records with values outside the template range, future dates, dates outside the goal period, dates more than 7 calendar days before today, or dates not interpreted in `APP_TIMEZONE`. | Validation boundary tests. | S1 / Lab 7 v1.1 |
 | FR-13 | Two goals based on the same template shall maintain separate daily records and progress. | Isolation test with two goals. | S1 |
 | FR-14 | Participant history, goals, records, and progress shall be private; managers shall not gain access by role alone. | Cross-role and cross-participant access tests. | S1 |
 | FR-15 | The UI shall present goals, entry forms, history, and computed progress with shared loading, empty, and error states. | Component and end-to-end UI checks. | S1 |
@@ -51,9 +51,9 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | BR-04 | There is at most one record per goal per calendar day. A duplicate is rejected; the existing record is never overwritten. | Unique-constraint and API test. | S1 |
 | BR-05 | Separate goals have separate records even when they use the same template. | Isolation test. | S1 |
 | BR-06 | A record value must be within the selected template's inclusive valid range. | Min/max boundary tests. | S1 |
-| BR-07 | Dates are calendar dates in `APP_TIMEZONE` (`Asia/Bangkok`); future dates are rejected. | Time-zone boundary test. | S1 |
+| BR-07 | Dates are calendar dates in `APP_TIMEZONE` (`Asia/Bangkok`); future dates and dates more than 7 calendar days before today are rejected. | Time-zone and retrospective-window boundary tests. | S1 / Lab 7 v1.1 |
 | BR-08 | A goal may start today or earlier; its end date must be on or after its start date. | Goal date tests. | S1 |
-| BR-09 | A record date must fall within the goal's inclusive start/end dates. | Out-of-period tests. | S1 |
+| BR-09 | A record date must fall within the goal's inclusive start/end dates; the retrospective seven-day rule also applies. | Out-of-period and retrospective-window tests. | S1 / Lab 7 v1.1 |
 | BR-10 | Sprint 1 permits no goal edit or delete; goal revisions are Sprint 2. Template unit is not editable; PATCH rejects `unit`. | Method/field rejection tests. | S1 |
 | BR-11 | Participant data is private. There is no consent-based sharing in the baseline, and Program Managers have no access to participant goals, records, or progress. | Permission matrix and API tests. | S1 |
 

@@ -12,6 +12,19 @@ import { validateQuantityRange, validateRecord } from '../validators/record.js';
 const recordColumns = "id, goal_id, to_char(activity_date, 'YYYY-MM-DD') AS activity_date, quantity, created_at";
 const mapRecord = (row: Record<string, unknown>) => ({ ...row, quantity: Number(row.quantity), activity_date: String(row.activity_date) });
 
+export const MAX_BACKDATE_DAYS = 7;
+
+export const computeEarliestDate = (todayStr: string, maxBackdateDays: number = MAX_BACKDATE_DAYS, timeZone: string = 'Asia/Bangkok'): string => {
+  const date = new Date(`${todayStr}T12:00:00+07:00`);
+  date.setDate(date.getDate() - maxBackdateDays);
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+};
+
 export const createRecordsRouter = (pool: Pool, config: AppConfig, clock: Clock = systemClock): Router => {
   const router = Router({ mergeParams: true });
   const authService = new AuthService(pool, config);
@@ -29,8 +42,20 @@ export const createRecordsRouter = (pool: Pool, config: AppConfig, clock: Clock 
       const range = rangeResult.rows[0];
       const quantityError = validateQuantityRange(validation.value.quantity, Number(range.min_value), Number(range.max_value));
       if (quantityError && !quantityError.valid) throw new AppError(400, ErrorCode.INVALID_QUANTITY, 'The activity quantity is outside the template range.', quantityError.details);
-      if (validation.value.activity_date < goal.start_date || validation.value.activity_date > goal.end_date || validation.value.activity_date > clock.today(config.appTimezone)) {
-        throw new AppError(400, ErrorCode.INVALID_ACTIVITY_DATE, 'The activity date is outside the permitted period.', { activity_date: 'Activity date must be within the goal period and cannot be in the future.' });
+      const todayDate = clock.today(config.appTimezone);
+      const earliestDate = computeEarliestDate(todayDate, MAX_BACKDATE_DAYS, config.appTimezone);
+      if (
+        validation.value.activity_date < goal.start_date ||
+        validation.value.activity_date > goal.end_date ||
+        validation.value.activity_date > todayDate ||
+        validation.value.activity_date < earliestDate
+      ) {
+        throw new AppError(
+          400,
+          ErrorCode.INVALID_ACTIVITY_DATE,
+          'The activity date is outside the permitted period.',
+          { activity_date: 'Activity date must be within the goal period, cannot be in the future, and cannot be more than 7 days in the past.' }
+        );
       }
       try {
         const inserted = await pool.query(`INSERT INTO daily_records (goal_id, activity_date, quantity) VALUES ($1, $2, $3) RETURNING ${recordColumns}`, [goal.id, validation.value.activity_date, validation.value.quantity]);
