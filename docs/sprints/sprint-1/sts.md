@@ -1,9 +1,5 @@
 # Sprint 1 Software Test Specification
 
-## Lab 7 v1.1.1 contract follow-up
-
-This follow-up to contract Issue #75 records `TEST-12.1i`, which clarifies that date validation is evaluated before duplicate detection. It is linked to parent change request #73 and is reviewed separately after the v1.1 contract merge.
-
 ## Scope and test evidence
 
 This STS is the shared AC-to-test index for the Sprint 1 contracts: F-01, F-02, F-03 (create, browse, and edit), F-04, F-05, F-06, and F-07. Detailed test rows remain in their owning feature contract. F-11 remains the S1-01 reminder/schedule placeholder. Tests were planned at unit, API/integration, database, and selected UI/end-to-end levels. Each test records its precondition, action, and observable result. The actual execution results, test file references, counts, and tested commit are recorded below.
@@ -60,9 +56,6 @@ S1-01 is the source of truth for shared IDs and sprint allocation. Therefore `F-
 | TEST-10 | AC-10 | API validation/authorization | Participant A session; Participant B goal. | POST record using B's goal ID. | 404 `GOAL_NOT_FOUND`; no record or B data exposed. |
 | TEST-11 | AC-11 | API validation/authorization | Goal is active; tomorrow is generated in `Asia/Bangkok`. | POST record with future date. | 400 `INVALID_ACTIVITY_DATE`. |
 | TEST-12 | AC-12 | API validation/authorization | Goal has inclusive start/end dates. | POST before start and after end. | Each request returns 400 `INVALID_ACTIVITY_DATE`; no row stored. |
-| TEST-12.1 | AC-12a | API validation/authorization | Owner Participant; goal started at least 8 days ago; clock uses `APP_TIMEZONE`. | POST today, today minus 7 calendar days, today minus 8 calendar days, and tomorrow. | Today and minus 7 return 201; minus 8 and tomorrow return 400 `INVALID_ACTIVITY_DATE`. |
-| TEST-12.1f | AC-12a, AC-14 | API/database integration | Existing record for the same goal at today minus 7 calendar days. | POST another record for that same goal/date. | 409 `DUPLICATE_DAILY_RECORD`; original quantity unchanged. |
-| TEST-12.1i | AC-12a, AC-14 | API/database integration | Existing record is inserted directly for the same goal at today minus 8 calendar days; owner Participant submits the same old date. | POST the same goal/date again. | 400 `INVALID_ACTIVITY_DATE`, because date validation precedes duplicate detection; no duplicate response is returned. |
 | TEST-13 | AC-13 | API validation/authorization | Template range is inclusive `[0, 500]`. | Submit 0, 500, -0.01, and 500.01. | Boundary values accepted; outside values rejected with 400 `INVALID_QUANTITY`. |
 | TEST-13a | AC-13 | Unit | Template range `[0, 500]` and decimal validator. | Evaluate 0, 500, -0.01, and 500.01 without HTTP/database dependencies. | Validator accepts inclusive bounds and rejects outside values. |
 | TEST-14 | AC-14 | API/database integration | One record already exists for goal/date. | POST a second quantity for same goal/date. | 409 `DUPLICATE_DAILY_RECORD`; first quantity unchanged. |
