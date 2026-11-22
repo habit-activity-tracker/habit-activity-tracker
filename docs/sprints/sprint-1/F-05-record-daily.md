@@ -18,6 +18,7 @@ The same calendar date may be recorded for two different goals, including two go
 |---|---|---|---|
 | v1.0 | Sprint 1 (`v0.1.1-sprint1`) | n/a | Original rule |
 | v1.1 | 2026-11-22 | #75 | Add 7-day retrospective cutoff (`AC-12a`) |
+| v1.1.1 | 2026-11-22 | #75 follow-up / parent #73 | Clarify date-before-duplicate validation with `TEST-12.1i` |
 
 ## Domain rule: activity date
 
@@ -106,6 +107,7 @@ The participant record form shows the template unit and valid range, defaults th
 | TEST-12 | AC-12 | API validation/authorization | Goal start/end known. | POST before start and after end. | 400 `INVALID_ACTIVITY_DATE`; no row stored. |
 | TEST-12.1 | AC-12a | API validation/authorization | Owner Participant; goal started at least 8 days ago; clock uses `APP_TIMEZONE`. | POST today, today minus 7 calendar days, today minus 8 calendar days, and tomorrow. | Today and minus 7 return 201; minus 8 and tomorrow return 400 `INVALID_ACTIVITY_DATE`. |
 | TEST-12.1f | AC-12a, AC-14 | API/database integration | Existing record for the same goal at today minus 7 calendar days. | POST another record for that same goal/date. | 409 `DUPLICATE_DAILY_RECORD`; original quantity unchanged. |
+| TEST-12.1i | AC-12a, AC-14 | API/database integration | Existing record is inserted directly for the same goal at today minus 8 calendar days; owner Participant submits the same old date. | POST the same goal/date again. | 400 `INVALID_ACTIVITY_DATE`; date validation precedes duplicate detection. |
 | TEST-13 | AC-13 | API validation/authorization | Inclusive template range `[0, 500]`. | Submit 0, 500, -0.01, 500.01. | Bounds accepted; outside rejected with 400 `INVALID_QUANTITY`. |
 | TEST-13a | AC-13 | Unit | Template range `[0, 500]` and decimal validator. | Evaluate 0, 500, -0.01, and 500.01 without HTTP/database dependencies. | Validator accepts inclusive bounds and rejects outside values. |
 | TEST-14 | AC-14 | API/database integration | One row exists for goal/date. | POST second quantity. | 409 `DUPLICATE_DAILY_RECORD`; original unchanged. |
