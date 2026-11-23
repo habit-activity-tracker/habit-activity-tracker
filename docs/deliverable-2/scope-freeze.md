@@ -14,48 +14,53 @@ The allocation below preserves the approved three-sprint plan in `docs/sprints/p
 
 ## Sprint 2 scope — Goal evolution and insights
 
-| Delivery ID | Canonical feature | Requirement / rule | Short description | Planned acceptance criteria | Owner |
-|---|---|---|---|---|---|
-| S2-F04-R | F-04 — Goal lifecycle | FR-06, FR-07, FR-08, BR-08, BR-10, NFR-02, NFR-05 | Versioned participant-owned goal revision with an explicit effective date; existing activity records remain an immutable audit trail. | AC-S2-01 to AC-S2-06 | Chayanit |
-| S2-F06-S | F-06 — Progress calculation | FR-11, BR-01, BR-02, BR-03 | Calculate a deterministic streak from persisted, valid daily records and expose it in the goal summary without changing the approved total-progress calculation. | AC-S2-07 to AC-S2-10 | Kulchaya |
-| S2-F07-S | F-07 — History and progress views | FR-08, FR-11, FR-13, FR-15, NFR-02, NFR-05 | Provide owner-only history summaries that make progress, streak, and goal-revision context understandable. | AC-S2-11 to AC-S2-14 | Kulchaya |
-| S2-F10-P | F-10 — Testable deployment/security baseline | NFR-01 | Produce reproducible performance evidence: a seeded 100,000-record data set and p95 authenticated-read/API measurement at or below 500 ms, excluding network transfer. | AC-S2-15 to AC-S2-17 | Chayanit |
+| Delivery ID | Canonical feature | Requirement / rule | Short description | Planned acceptance criteria | Issue / branch | Dependencies | Owner |
+|---|---|---|---|---|---|---|---|
+| S2-F04-R | F-04 — Goal lifecycle | FR-06, FR-07, FR-08, BR-08, BR-10, NFR-02, NFR-05 | Versioned participant-owned goal revision with an explicit effective date; existing activity records remain an immutable audit trail. | AC-S2-01 to AC-S2-06 | Issue 5; `feature/s2-f04-goal-revision` | D2-GATE-01 | Chayanit |
+| S2-F06-S | F-06 — Progress calculation | FR-11, BR-01, BR-02, BR-03 | Calculate a deterministic streak from persisted, valid daily records and expose it in the goal summary without changing the approved total-progress calculation. | AC-S2-07 to AC-S2-10 | Issue 6; `feature/s2-f06-streak` | D2-GATE-01, S2-F04-R | Kulchaya |
+| S2-F07-S | F-07 — History and progress views | FR-08, FR-11, FR-13, FR-15, NFR-02, NFR-05 | Provide owner-only history summaries that make progress, streak, and goal-revision context understandable. | AC-S2-11 to AC-S2-14 | Issue 6; `feature/s2-f07-history-summary` | D2-GATE-01, S2-F04-R, S2-F06-S | Kulchaya |
+| S2-F10-P | F-10 — Testable deployment/security baseline | NFR-01 | Produce reproducible performance evidence: a seeded 100,000-record data set and p95 authenticated-read/API measurement at or below 500 ms, excluding network transfer. | AC-S2-15 to AC-S2-17 | Issue 5; `feature/s2-f10-performance` | D2-GATE-01 | Chayanit |
 
 ### Sprint 2 boundary decisions
 
 - `S2-F04-R` changes the goal lifecycle only through a versioned revision. It must not edit or delete a past `ActivityRecord`, weaken ownership checks, or allow a manager to access participant data.
 - `S2-F06-S` and `S2-F07-S` extend the existing summary/history responsibilities. They do not replace BR-02/BR-03: percent progress remains `total / target * 100`, half-up rounded to one decimal and capped at 100.
-- `S2-F10-P` is a non-UI engineering feature. Its deliverable is executable performance test/data evidence, not an unsupported claim of performance.
+- `S2-F10-P` is a non-UI engineering feature. Measure in the reproducible local Docker Compose environment first, using the documented host/specification, fixed seed generator, warm-up, request count, query endpoint and percentile calculation. Cloud Run/Cloud SQL measurement is optional corroborating evidence only; do not seed production or make the Sprint 2 result depend on its cost/capacity.
+- Integration order is mandatory: `S2-F04-R → S2-F06-S → S2-F07-S`. `S2-F10-P` may proceed independently after D2-GATE-01.
 
 ## Sprint 3 scope — Reminder placeholder and operational readiness
 
-| Delivery ID | Canonical feature | Requirement / rule | Status on scope-freeze baseline | Implement in Delivery 2? |
-|---|---|---|---|---|
-| S3-F11-R | F-11 — Reminder/schedule placeholder | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned. `ReminderSchedule` exists only as an SDS placeholder; there is no migration, API, UI, or test on `af35102`. | **Yes** |
-| S3-F10-O | F-10 — Operational readiness | NFR-07 | In progress. Lab 5 established Docker, CI/CD, Cloud Run and managed-secret deployment; a current recovery/restore exercise and final operational verification remain. | No — contract and evidence work only |
+| Delivery ID | Canonical feature | Requirement / rule | Current status | Issue / branch | Remaining action |
+|---|---|---|---|---|---|
+| S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | Issue 9; `feature/s3-f11-reminder-schedule` | Implement, test, and accept the selected domain workflow below. |
+| S3-F10-O | F-10 — Operational readiness | NFR-07 | In progress | Issue 12/14; `deploy/d2-candidate`, `docs/d2-final` | Run and record recovery/restore evidence and final deployment verification. |
+| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | Issue 7/11; `test/d2-access-control`, `release/v0.2.0` | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
+| S3-Q01 | Technical-debt security hardening (not an approved baseline FR/BR) | CSRF and rate-limit gap | Planned | Backlog; branch only after approved scope decision | Obtain scope decision; do not claim implementation in Delivery 2 without it. |
+| S3-Q02 | Technical-debt observability (not an approved baseline FR/BR) | Structured safe error logging | Planned | Backlog; branch only after approved scope decision | Decide whether to add redacted error logging; passwords and private payloads must never be logged. |
 
 ## Chosen Sprint 3 workflow to implement now
 
-**Feature:** `S3-F11-R` / canonical F-11 — participant reminder schedule placeholder.
+**Feature:** `S3-F11-R` / canonical F-11 — participant reminder schedule and next-occurrence rule.
 
-**Workflow:** An authenticated participant creates a schedule for one of their own goals (`local_time`, selected `days_of_week`, `enabled`), retrieves only their own schedules, and sees the saved schedule after reload. The service persists the schedule but deliberately does not dispatch a notification.
+**Workflow:** An authenticated participant creates a schedule for one of their own goals (`local_time`, selected `days_of_week`, `enabled`), retrieves only their own schedules, and sees both the saved schedule and its calculated next occurrence after reload. The service persists the schedule but deliberately does not dispatch a notification.
 
 **Meaningful rule and rejection cases:**
 
-1. A schedule is accepted only for an existing goal owned by the authenticated participant.
-2. Invalid local time or an empty/invalid day selection is rejected using the shared API error contract.
-3. Another participant receives privacy-safe `404`; a Program Manager receives `403`; an unauthenticated caller receives `401`.
-4. No notification job, provider call, email, push message, or external dispatch is created; this is the approved AD-15/AD-17 boundary.
+1. A schedule is accepted only for an existing goal owned by the authenticated participant and whose `end_date` is today or later in `APP_TIMEZONE`.
+2. `days_of_week` must contain one to seven unique ISO weekday values (`1` Monday through `7` Sunday); an empty list, duplicate, or out-of-range value is rejected. A goal may have at most three schedules.
+3. The API calculates `next_occurrence_at` from persisted schedule data and an injected clock in `APP_TIMEZONE`. It returns the first selected local weekday/time strictly after “now”, including cross-midnight and cross-week boundaries; the calculation does not mutate the stored schedule.
+4. Another participant receives privacy-safe `404`; a Program Manager receives `403`; an unauthenticated caller receives `401`.
+5. No notification job, provider call, email, push message, or external dispatch is created; this is the approved AD-15/AD-17 boundary.
 
 **Why this is feasible by 27 November:** it is a narrowly bounded model, migration, owner-scoped API and one focused UI path. It reuses established session, goal ownership, error, migration, seed, and test patterns without integrating a notification provider.
 
-## Approved baseline changes carried forward
+## Baseline changes and preserved decisions
 
-| ID | Change | Affected requirement / feature | Decision and rationale | Approved / released version |
-|---|---|---|---|---|
-| CR-01 | Limit new activity recording to today through seven calendar days before today in `APP_TIMEZONE`. | FR-12; BR-07; BR-09; F-05 | Approved adaptive-maintenance change from Lab 7. It bounds retrospective entry while retaining the existing goal-period and duplicate rules. | F-05 contract v1.1; release `1f425cc`, deployed baseline `af35102` |
-| CR-02 | A goal target is a period total, not a per-day value; template min/max constrain one record only. | FR-06, FR-07; BR-01; AD-18 | Preserved clarification needed for all goal-revision and summary work. A revision must not incorrectly cap a period target by the template's daily range. | AD-18; Lab 7 baseline |
-| CR-03 | F-11 represents schedules only; notification delivery, channels, and opt-in are excluded. | FR-16; F-11; AD-15, AD-17 | Preserved TA/workshop scope decision. It makes the selected Sprint 3 workflow verifiable without claiming notification delivery. | AD-17; Sprint 3 contract to be written before code |
+| ID | Type | Change or decision | Affected requirement / feature | Decision and rationale | Approved / released version |
+|---|---|---|---|---|---|
+| CR-01 | Approved change | Limit new activity recording to today through seven calendar days before today in `APP_TIMEZONE`. | FR-12; BR-07; BR-09; F-05 | Approved adaptive-maintenance change from Lab 7. It bounds retrospective entry while retaining the existing goal-period and duplicate rules. | F-05 contract v1.1; release `1f425cc`, deployed baseline `af35102` |
+| AD-18 | Preserved decision | A goal target is a period total, not a per-day value; template min/max constrain one record only. | FR-06, FR-07; BR-01 | This is an existing clarification, not a new change request. A revision must not incorrectly cap a period target by the template's daily range. | Approved baseline decision AD-18 |
+| AD-15/17 | Preserved decision | F-11 represents schedules only; notification delivery, channels, and opt-in are excluded. | FR-16; F-11; BR-11 | Existing TA/workshop scope decision. The selected workflow therefore proves scheduling-domain behavior without claiming notification delivery. | Approved baseline decisions AD-15 and AD-17 |
 
 ## Carried-over findings and operational follow-up
 
@@ -64,9 +69,14 @@ These findings are deliberately visible to Part A/change-register work. They are
 | ID | Source | Finding / decision at scope freeze | Status and next action |
 |---|---|---|---|
 | PD-03a | Lab 7 post-deploy check | Invalid JSON submitted to `POST /api/auth/login` returned `500 INTERNAL_ERROR`; valid malformed-email and unknown-user cases retained their expected 400/401 behavior. The evidence refers to GitHub Issue #89. | Remaining. Triage and fix or explicitly defer with re-test evidence before the final release. |
-| OP-01 | Lab 7 smoke test | Public health, readiness, UI and unauthenticated-template checks passed; login was skipped because optional smoke credentials were not configured. | Remaining evidence gap. Add a safe authenticated post-deploy check using private handoff credentials or a controlled seeded account; never commit credentials. |
-| OP-02 | Lab 7 deployment evidence | The deployed image tag/digest identifies the commit correctly, but the application `GIT_COMMIT_SHA` environment value was stale. | Remaining. Correct or remove the misleading display/variable and verify the candidate version by tag, image digest, Cloud Run revision, and CI run. |
+| OP-01 | Lab 7 smoke test | Public health, readiness, UI and unauthenticated-template checks passed; login was skipped because optional smoke credentials were not configured. | Remaining evidence gap. Open a board issue; add a safe authenticated post-deploy check using private handoff credentials or a controlled seeded account; never commit credentials. |
+| OP-02 | Lab 7 deployment evidence | The deployed image tag/digest identifies the commit correctly, but the application `GIT_COMMIT_SHA` environment value was stale. | Remaining. Open a board issue; correct or remove the misleading display/variable and verify the candidate version by tag, image digest, Cloud Run revision, and CI run. |
 | EV-01 | Lab 7 regression evidence | `TEST-21` fixture was updated to an injected date within the new seven-day window; the assertion purpose was unchanged. | Resolved at `f6c07fa`; preserve the regression evidence. |
+| CI-01 | Lab 7 process retrospective | PRs into `lab7-staging` received zero CI checks because the workflow triggered only for `main`, `lab5-staging`, and `lab6-staging`. | Blocking prerequisite. Create a dedicated CI PR adding `d2-staging` before any Delivery 2 feature PR is opened. |
+| E2E-01 | Lab 7 fixture audit / current E2E source | `e2e/journey.spec.ts` still uses fixed date `2026-11-04`, now outside the 7-day API window. | Remaining. Replace with an injected/current valid date and execute E2E before regression acceptance. |
+| NFR-06-GAP | Lab 7 metrics | API statement coverage was recorded as 83.05%; NFR-06 requires at least 90% of service/domain rules plus all endpoint permission cases. | Remaining. Re-measure after Sprint 2 work and close or explicitly disclose the gap. |
+| SEC-01 | Known limitation | CSRF tokens and rate limiting are not baseline requirements and were not implemented in Sprint 1. | Technical debt only unless an approved scope decision promotes it. |
+| OBS-01 | Lab 7 retrospective | Safe structured error logging is absent, slowing diagnosis of PD-03a. | Technical debt only unless an approved scope decision promotes it. |
 
 ## Scope controls
 
@@ -82,4 +92,6 @@ These findings are deliberately visible to Part A/change-register work. They are
 - [ ] Create labels: `delivery-2`, `part-A`, `part-B`, `part-C`, `part-D`, `part-E`, `docs`, `feature`, `test`, `deploy`, `evidence`.
 - [ ] Create board columns: Backlog, Ready, In Progress, In Review, Done.
 - [ ] Create and assign Delivery 2 Issues 2–14 from the approved issue plan; apply the milestone and relevant labels.
+- [ ] Create the additional blocking CI issue for CI-01 (`ci/d2-staging-trigger`) and place it in In Progress before any contract or feature PR.
+- [ ] Add the actual GitHub issue number to every Issue / branch cell and link OP-01, OP-02, CI-01, E2E-01, NFR-06-GAP, SEC-01, and OBS-01 to their Part A/change-register entries.
 - [ ] Keep Issue 1 in **In Progress** until Kulchaya has reviewed this scope freeze.
