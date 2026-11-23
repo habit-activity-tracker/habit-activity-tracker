@@ -1,10 +1,17 @@
 # Deliverable 2 Scope Freeze
 
-**Version:** 1.0
-**Date:** 23 November 2026 (Asia/Bangkok)
+**Version:** 1.1
+**Date:** 24 November 2026 (Asia/Bangkok)
 **Lead:** Chayanit Kuntanarumitkul (67070503408)
 **Reviewer:** Kulchaya Paipinij (67070503406)
 **Issue:** Delivery 2 Issue 1 — Scope freeze and Issue board setup
+
+## Revision history
+
+| Version | Date | Change | Reason |
+|---|---|---|---|
+| 1.0 | 23 November 2026 | Initial scope allocation, Sprint 3 workflow selection, baseline decisions, and carried-over findings. | Freeze the Deliverable 2 baseline before contracts. |
+| 1.1 | 24 November 2026 | Added CI gate sequencing, AC reservations, Sprint 3 ownership/dependencies, dedicated coverage branch, and F-11 contract decisions. | Address reviewer findings without overwriting the original scope decision. |
 
 ## Baseline and source of truth
 
@@ -30,11 +37,19 @@ The allocation below preserves the approved three-sprint plan in `docs/sprints/p
 
 ### Delivery gate
 
-`D2-GATE-01` means **CI-01 has been merged into `main` and a verification PR to `d2-staging` has run the `test-and-docker` check successfully**. No Sprint 2 or Sprint 3 feature branch may be opened until this gate has passed. The implementation branch is `ci/d2-staging-trigger`.
+`D2-GATE-01` means all of the following have happened:
+
+1. CI-01 was delivered as the one bootstrap exception: PR `ci/d2-staging-trigger` went directly to `main`, received Kulchaya's substantive review, and its `test-and-docker` check passed. The CI-01 PR changes only the workflow trigger and must also attach a local `npm test` and build result for review.
+2. `d2-staging` was created from that merged `main` commit.
+3. A small verification PR into `d2-staging` ran `test-and-docker` successfully.
+
+After D2-GATE-01 passes, **every** Delivery 2 PR targeting `d2-staging`—contracts, implementation, tests, documentation, evidence, and release preparation—must have the CI check and partner review. The already-open scope-freeze/Issue 1 PR and CI-01 are the only pre-gate governance exceptions; no later contract or feature PR is exempt. The CI-01 implementation branch is `ci/d2-staging-trigger`.
 
 ### Contract and acceptance-criterion reservation
 
 The ranges in the Sprint 2 table are reserved identifiers only; complete, numbered AC and STS rows must be written, reviewed, and committed in the pre-implementation contracts for Issue 3 and Issue 4. Planned locations are `docs/deliverable-2/contracts/sprint-2/` and the Sprint 2 completion table. They are not evidence of implementation or passing verification at scope freeze.
+
+**Required Issue 3 action:** The S2-F04-R contract must answer the F-11 dependency explicitly: when a revision shortens a goal's `end_date` to before the current `APP_TIMEZONE` date, an existing associated reminder schedule remains persisted but `next_occurrence_at` becomes `null`. Kulchaya must review this decision before the contract is merged.
 
 ## Sprint 3 scope — Reminder scheduling and operational readiness
 
@@ -42,7 +57,7 @@ The ranges in the Sprint 2 table are reserved identifiers only; complete, number
 |---|---|---|---|---|---|---|---|---|
 | S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | AC-S3-01 to AC-S3-09 | Issue 9; `feature/s3-f11-reminder-schedule` | Kulchaya / Chayanit | D2-GATE-01, S2-F04-R contract decision | Implement, test, and accept the selected domain workflow below. |
 | S3-F10-O | F-10 — Operational readiness | NFR-07 | Planned | AC-S3-10 to AC-S3-12 | Issue 12/14; `deploy/d2-candidate`, `docs/d2-final` | Chayanit / Kulchaya | D2-GATE-01, release candidate | Run and record recovery/restore evidence and final deployment verification. |
-| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | AC-S3-13 to AC-S3-14 | New follow-up issue; `test/s3-coverage` | Chayanit / Kulchaya | D2-GATE-01 | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
+| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | AC-S3-13 to AC-S3-14 | Issue #TBD at board creation; `test/s3-coverage` | Chayanit / Kulchaya | D2-GATE-01 | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
 | S3-Q01 | Technical-debt security hardening (not an approved baseline FR/BR) | CSRF and rate-limit gap | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Obtain scope decision; do not claim implementation in Delivery 2 without it. |
 | S3-Q02 | Technical-debt observability (not an approved baseline FR/BR) | Structured safe error logging | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Decide whether to add redacted error logging; passwords and private payloads must never be logged. |
 
@@ -109,6 +124,7 @@ These findings are deliberately visible to Part A/change-register work. They are
 - [ ] Create board columns: Backlog, Ready, In Progress, In Review, Done.
 - [ ] Create and assign Delivery 2 Issues 2–14 from the approved issue plan; apply the milestone and relevant labels.
 - [ ] Create the additional blocking CI issue for CI-01 (`ci/d2-staging-trigger`) and place it in In Progress before any contract or feature PR.
-- [ ] Create the follow-up coverage issue for S3-F10-Q (`test/s3-coverage`) without combining it with the access-control or release branches.
+- [ ] After CI-01 is merged, create `d2-staging` from `main`; configure branch protection if the repository settings permit it.
+- [ ] Create the follow-up coverage issue for S3-F10-Q (`test/s3-coverage`) without combining it with the access-control or release branches, then replace `Issue #TBD` with the actual GitHub issue number.
 - [ ] Add the actual GitHub issue number to every Issue / branch cell and link OP-01, OP-02, CI-01, E2E-01, NFR-06-GAP, SEC-01, and OBS-01 to their Part A/change-register entries.
 - [ ] Keep Issue 1 in **In Progress** until Kulchaya has reviewed this scope freeze.
