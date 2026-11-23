@@ -1,6 +1,6 @@
 # Deliverable 2 Scope Freeze
 
-**Version:** 1.2
+**Version:** 1.3
 **Date:** 24 November 2026 (Asia/Bangkok)
 **Lead:** Chayanit Kuntanarumitkul (67070503408)
 **Reviewer:** Kulchaya Paipinij (67070503406)
@@ -13,6 +13,7 @@
 | 1.0 | 23 November 2026 | Initial scope allocation, Sprint 3 workflow selection, baseline decisions, and carried-over findings. | Freeze the Deliverable 2 baseline before contracts. |
 | 1.1 | 24 November 2026 | Added CI gate sequencing, AC reservations, Sprint 3 ownership/dependencies, dedicated coverage branch, and F-11 contract decisions. | Address reviewer findings without overwriting the original scope decision. |
 | 1.2 | 24 November 2026 | Clarified that CI-01 is the sole bootstrap exception, scope freeze waits for `d2-staging`, and planned Issue numbers are not GitHub Issue numbers. | Remove gate ambiguity and prevent inaccurate issue references. |
+| 1.3 | 24 November 2026 | Removed unassigned GitHub issue placeholders. | Keep the scope freeze accurate until each actual Issue is created. |
 
 ## Baseline and source of truth
 
@@ -24,10 +25,10 @@ The allocation below preserves the approved three-sprint plan in `docs/sprints/p
 
 | Delivery ID | Canonical feature | Requirement / rule | Short description | Planned acceptance criteria | Issue / branch | Dependencies | Owner |
 |---|---|---|---|---|---|---|---|
-| S2-F04-R | F-04 — Goal lifecycle | FR-06, FR-07, FR-08, BR-08, BR-10, NFR-02, NFR-05 | Versioned participant-owned goal revision with an explicit effective date; existing activity records remain an immutable audit trail. | AC-S2-01 to AC-S2-06 | Plan Issue 5; GitHub #TBD; `feature/s2-f04-goal-revision` | D2-GATE-01 | Chayanit |
-| S2-F06-S | F-06 — Progress calculation | FR-11, BR-01, BR-02, BR-03 | Calculate a deterministic streak from persisted, valid daily records and expose it in the goal summary without changing the approved total-progress calculation. | AC-S2-07 to AC-S2-10 | Plan Issue 6; GitHub #TBD; `feature/s2-f06-streak` | D2-GATE-01, S2-F04-R | Kulchaya |
-| S2-F07-S | F-07 — History and progress views | FR-08, FR-11, FR-13, FR-15, NFR-02, NFR-05 | Provide owner-only history summaries that make progress, streak, and goal-revision context understandable. | AC-S2-11 to AC-S2-14 | Plan Issue 6; GitHub #TBD; `feature/s2-f07-history-summary` | D2-GATE-01, S2-F04-R, S2-F06-S | Kulchaya |
-| S2-F10-P | F-10 — Testable deployment/security baseline | NFR-01 | Produce reproducible performance evidence: a seeded 100,000-record data set and p95 authenticated-read/API measurement at or below 500 ms, excluding network transfer. | AC-S2-15 to AC-S2-17 | Plan Issue 5; GitHub #TBD; `feature/s2-f10-performance` | D2-GATE-01 | Chayanit |
+| S2-F04-R | F-04 — Goal lifecycle | FR-06, FR-07, FR-08, BR-08, BR-10, NFR-02, NFR-05 | Versioned participant-owned goal revision with an explicit effective date; existing activity records remain an immutable audit trail. | AC-S2-01 to AC-S2-06 | Plan Issue 5; `feature/s2-f04-goal-revision` | D2-GATE-01 | Chayanit |
+| S2-F06-S | F-06 — Progress calculation | FR-11, BR-01, BR-02, BR-03 | Calculate a deterministic streak from persisted, valid daily records and expose it in the goal summary without changing the approved total-progress calculation. | AC-S2-07 to AC-S2-10 | Plan Issue 6; `feature/s2-f06-streak` | D2-GATE-01, S2-F04-R | Kulchaya |
+| S2-F07-S | F-07 — History and progress views | FR-08, FR-11, FR-13, FR-15, NFR-02, NFR-05 | Provide owner-only history summaries that make progress, streak, and goal-revision context understandable. | AC-S2-11 to AC-S2-14 | Plan Issue 6; `feature/s2-f07-history-summary` | D2-GATE-01, S2-F04-R, S2-F06-S | Kulchaya |
+| S2-F10-P | F-10 — Testable deployment/security baseline | NFR-01 | Produce reproducible performance evidence: a seeded 100,000-record data set and p95 authenticated-read/API measurement at or below 500 ms, excluding network transfer. | AC-S2-15 to AC-S2-17 | Plan Issue 5; `feature/s2-f10-performance` | D2-GATE-01 | Chayanit |
 
 ### Sprint 2 boundary decisions
 
@@ -56,9 +57,9 @@ The ranges in the Sprint 2 table are reserved identifiers only; complete, number
 
 | Delivery ID | Canonical feature | Requirement / rule | Current status | Reserved AC | Issue / branch | Owner / reviewer | Dependencies | Remaining action |
 |---|---|---|---|---|---|---|---|---|
-| S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | AC-S3-01 to AC-S3-09 | Plan Issue 9; GitHub #TBD; `feature/s3-f11-reminder-schedule` | Kulchaya / Chayanit | D2-GATE-01, S2-F04-R contract decision | Implement, test, and accept the selected domain workflow below. |
-| S3-F10-O | F-10 — Operational readiness | NFR-07 | Planned | AC-S3-10 to AC-S3-12 | Plan Issues 12/14; GitHub #TBD; `deploy/d2-candidate`, `docs/d2-final` | Chayanit / Kulchaya | D2-GATE-01, release candidate | Run and record recovery/restore evidence and final deployment verification. |
-| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | AC-S3-13 to AC-S3-14 | Issue #TBD at board creation; `test/s3-coverage` | Chayanit / Kulchaya | D2-GATE-01 | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
+| S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | AC-S3-01 to AC-S3-09 | Plan Issue 9; `feature/s3-f11-reminder-schedule` | Kulchaya / Chayanit | D2-GATE-01, S2-F04-R contract decision | Implement, test, and accept the selected domain workflow below. |
+| S3-F10-O | F-10 — Operational readiness | NFR-07 | Planned | AC-S3-10 to AC-S3-12 | Plan Issues 12/14; `deploy/d2-candidate`, `docs/d2-final` | Chayanit / Kulchaya | D2-GATE-01, release candidate | Run and record recovery/restore evidence and final deployment verification. |
+| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | AC-S3-13 to AC-S3-14 | Follow-up Issue to create; `test/s3-coverage` | Chayanit / Kulchaya | D2-GATE-01 | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
 | S3-Q01 | Technical-debt security hardening (not an approved baseline FR/BR) | CSRF and rate-limit gap | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Obtain scope decision; do not claim implementation in Delivery 2 without it. |
 | S3-Q02 | Technical-debt observability (not an approved baseline FR/BR) | Structured safe error logging | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Decide whether to add redacted error logging; passwords and private payloads must never be logged. |
 
@@ -126,6 +127,6 @@ These findings are deliberately visible to Part A/change-register work. They are
 - [ ] Create and assign Delivery 2 Issues 2–14 from the approved issue plan; apply the milestone and relevant labels.
 - [ ] Create the additional blocking CI issue for CI-01 (`ci/d2-staging-trigger`) and place it in In Progress before any contract or feature PR.
 - [ ] After CI-01 is merged, create `d2-staging` from `main`; configure branch protection if the repository settings permit it.
-- [ ] Create the follow-up coverage issue for S3-F10-Q (`test/s3-coverage`) without combining it with the access-control or release branches, then replace `Issue #TBD` with the actual GitHub issue number.
-- [ ] Replace every `GitHub #TBD` with the actual GitHub issue number after the board Issues are created; link OP-01, OP-02, CI-01, E2E-01, NFR-06-GAP, SEC-01, and OBS-01 to their Part A/change-register entries.
+- [ ] Create the follow-up coverage issue for S3-F10-Q (`test/s3-coverage`) without combining it with the access-control or release branches.
+- [ ] Link OP-01, OP-02, CI-01, E2E-01, NFR-06-GAP, SEC-01, and OBS-01 to their Part A/change-register entries after their Issues are created.
 - [ ] Keep Issue 1 in **In Progress** until Kulchaya has reviewed this scope freeze.
