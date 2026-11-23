@@ -28,15 +28,23 @@ The allocation below preserves the approved three-sprint plan in `docs/sprints/p
 - `S2-F10-P` is a non-UI engineering feature. Measure in the reproducible local Docker Compose environment first, using the documented host/specification, fixed seed generator, warm-up, request count, query endpoint and percentile calculation. Cloud Run/Cloud SQL measurement is optional corroborating evidence only; do not seed production or make the Sprint 2 result depend on its cost/capacity.
 - Integration order is mandatory: `S2-F04-R → S2-F06-S → S2-F07-S`. `S2-F10-P` may proceed independently after D2-GATE-01.
 
-## Sprint 3 scope — Reminder placeholder and operational readiness
+### Delivery gate
 
-| Delivery ID | Canonical feature | Requirement / rule | Current status | Issue / branch | Remaining action |
-|---|---|---|---|---|---|
-| S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | Issue 9; `feature/s3-f11-reminder-schedule` | Implement, test, and accept the selected domain workflow below. |
-| S3-F10-O | F-10 — Operational readiness | NFR-07 | In progress | Issue 12/14; `deploy/d2-candidate`, `docs/d2-final` | Run and record recovery/restore evidence and final deployment verification. |
-| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | Issue 7/11; `test/d2-access-control`, `release/v0.2.0` | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
-| S3-Q01 | Technical-debt security hardening (not an approved baseline FR/BR) | CSRF and rate-limit gap | Planned | Backlog; branch only after approved scope decision | Obtain scope decision; do not claim implementation in Delivery 2 without it. |
-| S3-Q02 | Technical-debt observability (not an approved baseline FR/BR) | Structured safe error logging | Planned | Backlog; branch only after approved scope decision | Decide whether to add redacted error logging; passwords and private payloads must never be logged. |
+`D2-GATE-01` means **CI-01 has been merged into `main` and a verification PR to `d2-staging` has run the `test-and-docker` check successfully**. No Sprint 2 or Sprint 3 feature branch may be opened until this gate has passed. The implementation branch is `ci/d2-staging-trigger`.
+
+### Contract and acceptance-criterion reservation
+
+The ranges in the Sprint 2 table are reserved identifiers only; complete, numbered AC and STS rows must be written, reviewed, and committed in the pre-implementation contracts for Issue 3 and Issue 4. Planned locations are `docs/deliverable-2/contracts/sprint-2/` and the Sprint 2 completion table. They are not evidence of implementation or passing verification at scope freeze.
+
+## Sprint 3 scope — Reminder scheduling and operational readiness
+
+| Delivery ID | Canonical feature | Requirement / rule | Current status | Reserved AC | Issue / branch | Owner / reviewer | Dependencies | Remaining action |
+|---|---|---|---|---|---|---|---|---|
+| S3-F11-R | F-11 — Reminder scheduling and occurrence rule | FR-16, BR-11, AD-15, AD-17, NFR-02, NFR-05 | Planned | AC-S3-01 to AC-S3-09 | Issue 9; `feature/s3-f11-reminder-schedule` | Kulchaya / Chayanit | D2-GATE-01, S2-F04-R contract decision | Implement, test, and accept the selected domain workflow below. |
+| S3-F10-O | F-10 — Operational readiness | NFR-07 | Planned | AC-S3-10 to AC-S3-12 | Issue 12/14; `deploy/d2-candidate`, `docs/d2-final` | Chayanit / Kulchaya | D2-GATE-01, release candidate | Run and record recovery/restore evidence and final deployment verification. |
+| S3-F10-Q | F-10 — Verification hardening | NFR-06 | Planned | AC-S3-13 to AC-S3-14 | New follow-up issue; `test/s3-coverage` | Chayanit / Kulchaya | D2-GATE-01 | Re-measure coverage and close the service/domain-rule gap to the documented 90% target, or disclose the remaining gap. |
+| S3-Q01 | Technical-debt security hardening (not an approved baseline FR/BR) | CSRF and rate-limit gap | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Obtain scope decision; do not claim implementation in Delivery 2 without it. |
+| S3-Q02 | Technical-debt observability (not an approved baseline FR/BR) | Structured safe error logging | Planned | None — debt, not contractual AC | Backlog; branch only after approved scope decision | Unassigned / both review | Approved scope decision | Decide whether to add redacted error logging; passwords and private payloads must never be logged. |
 
 ## Chosen Sprint 3 workflow to implement now
 
@@ -51,6 +59,14 @@ The allocation below preserves the approved three-sprint plan in `docs/sprints/p
 3. The API calculates `next_occurrence_at` from persisted schedule data and an injected clock in `APP_TIMEZONE`. It returns the first selected local weekday/time strictly after “now”, including cross-midnight and cross-week boundaries; the calculation does not mutate the stored schedule.
 4. Another participant receives privacy-safe `404`; a Program Manager receives `403`; an unauthenticated caller receives `401`.
 5. No notification job, provider call, email, push message, or external dispatch is created; this is the approved AD-15/AD-17 boundary.
+
+**Reserved AC coverage:** AC-S3-01 schedule creation and reload persistence; AC-S3-02 owner-only goal selection; AC-S3-03 local-time/day validation; AC-S3-04 unique weekday and maximum-three-schedules rule; AC-S3-05 inactive/ended-goal rejection; AC-S3-06 next occurrence in `APP_TIMEZONE`; AC-S3-07 midnight/week boundary; AC-S3-08 access denial and ownership privacy; AC-S3-09 no-dispatch rule. The Issue 8 contract must add STS cases for each before Issue 9 implementation begins.
+
+**Open questions to resolve in the F-11 contract before implementation:**
+
+1. If a goal ends after a schedule has been created, `next_occurrence_at` must be returned as `null` rather than an error; the persisted schedule remains readable to its owner.
+2. A schedule belongs to the stable `goal_id`, not a historical goal-revision row. The S2-F04-R contract must state whether a revision that shortens `end_date` triggers the null result in rule 1; the selected default is yes.
+3. If `enabled=false`, `next_occurrence_at` is `null`; the schedule remains persisted and can later be re-enabled by its owner if an update lifecycle is included in the F-11 contract. If update is not included, the contract must explicitly say so.
 
 **Why this is feasible by 27 November:** it is a narrowly bounded model, migration, owner-scoped API and one focused UI path. It reuses established session, goal ownership, error, migration, seed, and test patterns without integrating a notification provider.
 
@@ -89,9 +105,10 @@ These findings are deliberately visible to Part A/change-register work. They are
 ## Issue-board setup checklist
 
 - [ ] Create milestone **Delivery 2**, due 29 November 2026.
-- [ ] Create labels: `delivery-2`, `part-A`, `part-B`, `part-C`, `part-D`, `part-E`, `docs`, `feature`, `test`, `deploy`, `evidence`.
+- [ ] Create labels: `delivery-2`, `part-A`, `part-B`, `part-C`, `part-D`, `part-E`, `docs`, `feature`, `test`, `deploy`, `evidence`, `ci`.
 - [ ] Create board columns: Backlog, Ready, In Progress, In Review, Done.
 - [ ] Create and assign Delivery 2 Issues 2–14 from the approved issue plan; apply the milestone and relevant labels.
 - [ ] Create the additional blocking CI issue for CI-01 (`ci/d2-staging-trigger`) and place it in In Progress before any contract or feature PR.
+- [ ] Create the follow-up coverage issue for S3-F10-Q (`test/s3-coverage`) without combining it with the access-control or release branches.
 - [ ] Add the actual GitHub issue number to every Issue / branch cell and link OP-01, OP-02, CI-01, E2E-01, NFR-06-GAP, SEC-01, and OBS-01 to their Part A/change-register entries.
 - [ ] Keep Issue 1 in **In Progress** until Kulchaya has reviewed this scope freeze.
