@@ -7,6 +7,9 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 import { requireOwnedGoal } from '../middleware/goalOwnership.js';
 import { AuthService } from '../services/auth.service.js';
 import { isUuid, validateGoal, validateGoalRevision } from '../validators/goal.js';
+import { calculateProgress } from '../services/progress.js';
+import { calculateStreak } from '../services/streak.js';
+import { systemClock, type Clock } from '../utils/clock.js';
 
 const goalColumns = "id, participant_id, template_id, target, to_char(start_date, 'YYYY-MM-DD') AS start_date, to_char(end_date, 'YYYY-MM-DD') AS end_date, COALESCE(version, 1) AS version, created_at, updated_at";
 const mapGoal = (row: Record<string, unknown>) => ({ ...row, target: Number(row.target), start_date: String(row.start_date), end_date: String(row.end_date), version: Number(row.version ?? 1) });
@@ -14,7 +17,7 @@ const mapGoal = (row: Record<string, unknown>) => ({ ...row, target: Number(row.
 const revisionColumns = "id, goal_id, version_number, target, to_char(end_date, 'YYYY-MM-DD') AS end_date, to_char(effective_date, 'YYYY-MM-DD') AS effective_date, created_at";
 const mapRevision = (row: Record<string, unknown>) => ({ ...row, version_number: Number(row.version_number), target: Number(row.target), end_date: String(row.end_date), effective_date: String(row.effective_date) });
 
-export const createGoalsRouter = (pool: Pool, config: AppConfig): Router => {
+export const createGoalsRouter = (pool: Pool, config: AppConfig, clock: Clock = systemClock): Router => {
   const router = Router();
   const authService = new AuthService(pool, config);
   router.post('/', requireAuth(authService), requireRole('participant'), async (request, response, next) => {
@@ -47,6 +50,27 @@ export const createGoalsRouter = (pool: Pool, config: AppConfig): Router => {
   });
   router.get('/:id', requireAuth(authService), requireRole('participant'), requireOwnedGoal(pool), (request, response) => {
     response.status(200).json({ goal: (request as AuthenticatedRequest).goal });
+  });
+
+  router.get('/:id/summary', requireAuth(authService), requireRole('participant'), requireOwnedGoal(pool), async (request, response, next) => {
+    try {
+      const goal = (request as AuthenticatedRequest).goal!;
+      const recordsResult = await pool.query<{ id: string; activity_date: string; quantity: number; created_at: string }>("SELECT id, to_char(activity_date, 'YYYY-MM-DD') AS activity_date, quantity, created_at FROM daily_records WHERE goal_id = $1 ORDER BY activity_date ASC, created_at ASC", [goal.id]);
+      const revisionsResult = await pool.query(`SELECT ${revisionColumns} FROM goal_revisions WHERE goal_id = $1 ORDER BY version_number ASC`, [goal.id]);
+      const records = recordsResult.rows.map((row) => ({ ...row, quantity: Number(row.quantity), activity_date: String(row.activity_date) }));
+      const progress = calculateProgress(goal.target, records.map((record) => record.quantity));
+      const today = clock.today(config.appTimezone);
+      const streak = calculateStreak(records.map((record) => record.activity_date), today, { startDate: goal.start_date, endDate: goal.end_date });
+      const revisions = revisionsResult.rows.length ? revisionsResult.rows.map(mapRevision) : [{
+        id: null, goal_id: goal.id, version_number: 1, target: goal.target, end_date: goal.end_date, effective_date: goal.start_date, created_at: null,
+      }];
+      response.status(200).json({
+        goal,
+        summary: { total_recorded: progress.totalRecorded, percent: progress.percent, streak_days: streak },
+        records,
+        revisions,
+      });
+    } catch (error) { next(error); }
   });
 
   router.post('/:id/revisions', requireAuth(authService), requireRole('participant'), requireOwnedGoal(pool), async (request, response, next) => {
