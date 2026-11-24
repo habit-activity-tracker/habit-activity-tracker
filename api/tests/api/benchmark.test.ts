@@ -3,6 +3,28 @@ import { createApp } from '../../src/app.js';
 import { resetTestDatabase } from '../helpers/testDb.js';
 import bcrypt from 'bcryptjs';
 import request from 'supertest';
+import { execFile } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
+import { promisify } from 'node:util';
+
+const execFileAsync = promisify(execFile);
+const repositoryRoot = resolve(dirname(fileURLToPath(import.meta.url)), '../../..');
+const benchmarkSeedModule = new URL('../../../scripts/benchmark-seed.ts', import.meta.url).href;
+
+const seedBenchmarkRecords = async (targetCount: number): Promise<void> => {
+  await execFileAsync(
+    process.execPath,
+    [
+      '--import',
+      'tsx',
+      '--input-type=module',
+      '--eval',
+      `import { runBenchmarkSeed } from '${benchmarkSeedModule}'; await runBenchmarkSeed(${targetCount});`,
+    ],
+    { cwd: repositoryRoot, env: process.env }
+  );
+};
 
 describe('S2-F10-P: Performance evidence and benchmark harness', () => {
   let pool: Pool;
@@ -55,6 +77,29 @@ describe('S2-F10-P: Performance evidence and benchmark harness', () => {
 
     const countRes = await pool.query<{ count: string }>('SELECT count(*)::text AS count FROM daily_records WHERE goal_id = $1', [goalId]);
     expect(parseInt(countRes.rows[0].count, 10)).toBe(500);
+  });
+
+  it('TEST-S2-15b / AC-S2-15: rerunning the deterministic seed replaces only benchmark fixtures', async () => {
+    await seedBenchmarkRecords(20);
+    const firstRun = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM daily_records r
+       JOIN goals g ON g.id = r.goal_id
+       JOIN users u ON u.id = g.participant_id
+       WHERE u.email = 'bench_user@example.com'`
+    );
+
+    await seedBenchmarkRecords(20);
+    const secondRun = await pool.query<{ count: string }>(
+      `SELECT count(*)::text AS count
+       FROM daily_records r
+       JOIN goals g ON g.id = r.goal_id
+       JOIN users u ON u.id = g.participant_id
+       WHERE u.email = 'bench_user@example.com'`
+    );
+
+    expect(Number(firstRun.rows[0].count)).toBe(20);
+    expect(Number(secondRun.rows[0].count)).toBe(20);
   });
 
   it('TEST-S2-16 & TEST-S2-17 / AC-S2-16, AC-S2-17: measures authenticated read latencies and verifies p95 <= 500 ms', async () => {
