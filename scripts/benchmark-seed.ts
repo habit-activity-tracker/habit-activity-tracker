@@ -11,7 +11,12 @@ const connectionString =
   process.env.DATABASE_URL ||
   'postgresql://habit:habit@localhost:5433/habit_tracker';
 
-if (process.env.APP_ENV === 'production' && !process.env.ALLOW_BENCHMARK_PROD) {
+const isProductionTarget =
+  process.env.NODE_ENV === 'production' ||
+  process.env.APP_ENV === 'production' ||
+  /(?:cloudsql|rds\.amazonaws\.com|supabase\.co)/i.test(connectionString);
+
+if (isProductionTarget) {
   console.error('CRITICAL: Benchmark seeding is strictly forbidden in production!');
   process.exit(1);
 }
