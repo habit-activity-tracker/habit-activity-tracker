@@ -1,0 +1,90 @@
+# Deliverable 2 — Part A: Sprint 1 Continuity and Change Register
+
+**Status:** Draft pending independent rerun and partner review
+**Issue:** Delivery 2 Issue 2
+**Lead:** Kulchaya Paipinij
+**Partner:** Chayanit Kuntanarumitkul
+**Baseline:** `af3510201f11cda5c684e03f2f213401f974a8b1` (`af35102`)
+**Accepted Sprint 1 reference:** `v0.1.1-sprint1` at `85db268`
+**Date:** 24 November 2026 (Asia/Bangkok)
+
+## Purpose and acceptance gate
+
+This document demonstrates that the accepted Sprint 1 journey remains available
+while recording every material finding carried from Labs 5–7. It does not claim
+that a planned check passed without a command, output, or linked evidence.
+
+Issue 2 is complete only when:
+
+- [ ] Kulchaya reruns the original Sprint 1 journey on a clean local database.
+- [ ] Chayanit independently reruns the same journey and compares counts.
+- [ ] The register below is reconciled against the Lab 5–7 evidence and GitHub issues.
+- [ ] Every unresolved item has an owner, next action, and target milestone.
+- [ ] Partner review is recorded on the Issue 2 PR.
+
+## Sprint 1 continuity matrix
+
+| Area | Preserved behavior to verify | Existing evidence/source | Current status | Rerun evidence |
+|---|---|---|---|---|
+| F-01 authentication | Valid login creates a session; invalid email and unknown credentials retain documented 400/401 responses. | `docs/sprints/sprint-1/F-01-auth.md`; Lab 7 post-deploy evidence | Preserved; production smoke did not include credentialed login. | [ ] Add command/output and revision or local commit |
+| F-02 access control | Unauthenticated requests return 401; manager/unauthorized role returns 403; private ownership is not disclosed. | `F-02-access-control.md`; `api/tests/api/*` permission tests | Preserved; B-11 evidence confirms Bob 404 and Manager 403 on final revision. | [ ] Rerun locally and attach output |
+| F-03 templates | Participant/manager visibility and manager-only template maintenance remain intact. | `F-03-*.md`; `api/tests/api/templates*.test.ts` | Preserved; TEST-21 fixture change is recorded below. | [ ] Rerun locally |
+| F-04 goals | Participant-owned goal creation validates target and dates; inactive/unknown templates are rejected. | `F-04-create-goal.md`; `api/tests/api/goals.test.ts` | Preserved by API suite evidence. | [ ] Rerun locally |
+| F-05 records | Owner can create/read records; future/out-of-period dates remain rejected; new 7-day cutoff applies only to new creation; duplicate remains 409. | `F-05-record-daily.md`; `api/tests/api/records.test.ts`; Lab 7 B-09/B-10/B-12 | CR-01 released and post-deploy checks passed. | [ ] Rerun full Sprint 1 path |
+| F-06/F-07 progress/history | Existing records remain readable and counted; total progress remains half-up rounded and capped at 100%. | `F-06-progress-history.md`; `progress.test.ts`; B-13 | Preserved; B-13 shows older records still counted. | [ ] Rerun locally |
+| F-10 build/deployment baseline | Build, migration, smoke and secret-handling checks remain reproducible. | `docs/evidence/workflow-evidence.md`; Lab 5 deployment evidence | Final deployment succeeded; local continuity rerun still pending. | [ ] Record build and test outputs |
+
+## Required local rerun
+
+Run from the repository root after starting the repository PostgreSQL service and
+using an isolated test database. Record the commit, date/time, machine, and all
+pass/fail/skip counts.
+
+```powershell
+docker compose up -d --wait postgres
+docker compose ps
+npm run test:unit
+npm run test:api
+npm run test:e2e
+npm run build
+```
+
+The current workspace check on 24 November 2026 showed no running Compose
+services, so no new local result is claimed in this draft.
+
+## Change and finding register
+
+| ID | Source | Finding / preserved decision | Status at Issue 2 | Owner | Next action / milestone |
+|---|---|---|---|---|---|
+| CR-01 | Lab 7 approved change, #73/#75 | New records accept today through seven calendar days ago in `APP_TIMEZONE`; 8+ days old returns 400. Existing records, ownership, period checks, and duplicate rule remain. | Released and deployed | Team | Preserve regression and post-deploy evidence; Final Delivery |
+| K-1 | Lab 6 | Generic duplicate-template message is a known limitation. | Accepted limitation | Team | Reassess only if an approved scope change is made; Final Delivery |
+| K-2 | Lab 6 | Invalid login email validation was fixed and re-tested. | Resolved | Team | Preserve test and deployment evidence |
+| K-3 | Lab 6 | Unit-test banner/coverage presentation limitation. | Accepted limitation | Team | Improve with later test/reporting work; Final Delivery |
+| PD-03a | Lab 7, Issue #89 | Invalid JSON sent to `POST /api/auth/login` returned 500 `INTERNAL_ERROR` instead of a documented 4xx response. No data exposure observed. | Minor, deferred outside Lab 7 scope | Team Ctrl C + Chaya | Decide and implement follow-up with contract, RED/GREEN, release and retest; Deliverable 2 / Final Delivery |
+| OP-01 | Lab 7 | Public smoke covered health, readiness, UI and unauthenticated API; credentialed login was skipped because no smoke credentials were configured. | Evidence gap | Chayanit | Add safe authenticated smoke check without committing credentials; Final Delivery |
+| OP-02 | Lab 7 | Runtime `GIT_COMMIT_SHA` was stale although image tag/digest and Cloud Run revision provided traceability. | Remaining technical debt | Chayanit | Set/remove the variable from deployment metadata and verify; Final Delivery |
+| EV-01 | Lab 7, PR #83 | TEST-21 changed from fixed `2026-11-01` to `2026-11-04` under injected `today = 2026-11-10`; assertion purpose was unchanged. | Resolved at `f6c07fa` | Kulchaya | Preserve fixture audit and rerun evidence |
+| CI-01 | Lab 7 retrospective | CI previously did not trigger for PRs targeting the staging branch. | Delivery gate item | Chayanit | Verify `test-and-docker` on `d2-staging` before other Delivery 2 merges |
+| E2E-01 | Current source audit | `e2e/journey.spec.ts` uses fixed `2026-11-04` for goal and record creation; it has no injected clock. | Remaining; high risk | Kulchaya | Replace with runtime-relative/injected date and rerun E2E before acceptance; Final Delivery |
+| NFR-06-GAP | Lab 7 metrics | Recorded API statement coverage was 83.05%; target is at least 90% of service/domain rules plus endpoint permission coverage. | Remaining gap | Chayanit | Re-measure on the final candidate and disclose or close; Final Delivery |
+| SEC-01 | Sprint 1 limitation | No CSRF tokens or rate limiting in the accepted baseline. | Technical debt, not current scope | Team | Obtain scope approval before implementation; Sprint 3/backlog |
+| OBS-01 | Lab 7 retrospective | Structured safe application error logging is absent, slowing diagnosis of PD-03a. | Technical debt, not current scope | Team | Decide logging contract; never log passwords/private payloads; Final Delivery |
+
+## Evidence reconciliation rules
+
+- A test is marked **PASS** only with a command, commit/revision, timestamp, and
+  readable output or screenshot.
+- A fixture change is recorded only when the requirement changed and the original
+  assertion remains meaningful; no test may be deleted, skipped, or weakened.
+- `CR-01` applies to new record creation. Existing rows are not rewritten and
+  remain readable and included in progress calculations.
+- Issue #89 is described as a deferred Minor follow-up, not as a fixed defect.
+- Sprint 2/Sprint 3 planned features are not counted as Sprint 1 continuity
+  evidence.
+
+## Partner review
+
+- [ ] Chayanit reviewed the continuity matrix against the actual Sprint 1 test files.
+- [ ] Chayanit reviewed the change register against Lab 5, Lab 6, and Lab 7 evidence.
+- [ ] Review comment includes concrete findings, not only “LGTM”.
+
