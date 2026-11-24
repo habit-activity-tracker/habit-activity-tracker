@@ -34,3 +34,11 @@ export const validateGoal = (input: unknown, timezone: string): GoalValidationRe
   if (Object.keys(details).length) return { valid: false, details };
   return { valid: true, value: { template_id: body.template_id as string, target: body.target as number, start_date: body.start_date as string, end_date: body.end_date as string } };
 };
+
+export interface GoalRevisionInput { target: number; end_date: string; }
+export type GoalRevisionValidationResult = { valid: true; value: GoalRevisionInput } | { valid: false; details: Record<string, string> };
+
+export const validateGoalRevision = (_input: unknown, _goalStartDate?: string): GoalRevisionValidationResult => {
+  // RED stub: intentionally incomplete so unit tests fail on assertions
+  return { valid: true, value: { target: 0, end_date: '' } };
+};
