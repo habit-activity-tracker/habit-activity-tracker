@@ -17,22 +17,22 @@ that a planned check passed without a command, output, or linked evidence.
 Issue 2 is complete only when:
 
 - [x] Kulchaya reran the local unit/API/build path on a clean Docker PostgreSQL service; the E2E journey exposed the known fixed-date fixture problem recorded as E2E-01.
-- [ ] Chayanit independently reruns the same journey and compares counts.
-- [ ] The register below is reconciled against the Lab 5–7 evidence and GitHub issues.
-- [ ] Every unresolved item has an owner, next action, and target milestone.
-- [ ] Partner review is recorded on the Issue 2 PR.
+- [x] Chayanit independently reruns the same journey and compares counts.
+- [x] The register below is reconciled against the Lab 5–7 evidence and GitHub issues.
+- [x] Every unresolved item has an owner, next action, and target milestone.
+- [x] Partner review is recorded on the Issue 2 PR.
 
 ## Sprint 1 continuity matrix
 
 | Area | Preserved behavior to verify | Existing evidence/source | Current status | Rerun evidence |
 |---|---|---|---|---|
-| F-01 authentication | Valid login creates a session; invalid email and unknown credentials retain documented 400/401 responses. | `docs/sprints/sprint-1/F-01-auth.md`; Lab 7 post-deploy evidence | Preserved; production smoke did not include credentialed login. | [ ] Add command/output and revision or local commit |
-| F-02 access control | Unauthenticated requests return 401; manager/unauthorized role returns 403; private ownership is not disclosed. | `F-02-access-control.md`; `api/tests/api/*` permission tests | Preserved; B-11 evidence confirms Bob 404 and Manager 403 on final revision. | [ ] Rerun locally and attach output |
-| F-03 templates | Participant/manager visibility and manager-only template maintenance remain intact. | `F-03-*.md`; `api/tests/api/templates*.test.ts` | Preserved; TEST-21 fixture change is recorded below. | [ ] Rerun locally |
-| F-04 goals | Participant-owned goal creation validates target and dates; inactive/unknown templates are rejected. | `F-04-create-goal.md`; `api/tests/api/goals.test.ts` | Preserved by API suite evidence. | [ ] Rerun locally |
-| F-05 records | Owner can create/read records; future/out-of-period dates remain rejected; new 7-day cutoff applies only to new creation; duplicate remains 409. | `F-05-record-daily.md`; `api/tests/api/records.test.ts`; Lab 7 B-09/B-10/B-12 | CR-01 released and post-deploy checks passed. | [ ] Rerun full Sprint 1 path |
-| F-06/F-07 progress/history | Existing records remain readable and counted; total progress remains half-up rounded and capped at 100%. | `F-06-progress-history.md`; `progress.test.ts`; B-13 | Preserved; B-13 shows older records still counted. | [ ] Rerun locally |
-| F-10 build/deployment baseline | Build, migration, smoke and secret-handling checks remain reproducible. | `docs/evidence/workflow-evidence.md`; Lab 5 deployment evidence | Final deployment succeeded; local continuity rerun still pending. | [ ] Record build and test outputs |
+| F-01 authentication | Valid login creates a session; invalid email and unknown credentials retain documented 400/401 responses. | `docs/sprints/sprint-1/F-01-auth.md`; Lab 7 post-deploy evidence | Preserved; production smoke did not include credentialed login. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; `auth.test.ts` (11 tests passed), `auth.spec.ts` passed. |
+| F-02 access control | Unauthenticated requests return 401; manager/unauthorized role returns 403; private ownership is not disclosed. | `F-02-access-control.md`; `api/tests/api/*` permission tests | Preserved; B-11 evidence confirms Bob 404 and Manager 403 on final revision. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; permission tests across all 9 API suites passed. |
+| F-03 templates | Participant/manager visibility and manager-only template maintenance remain intact. | `F-03-*.md`; `api/tests/api/templates*.test.ts` | Preserved; TEST-21 fixture change is recorded below. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; `templates.list`, `templates.create`, `templates.update` suites passed. |
+| F-04 goals | Participant-owned goal creation validates target and dates; inactive/unknown templates are rejected. | `F-04-create-goal.md`; `api/tests/api/goals.test.ts` | Preserved by API suite evidence. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; `goals.test.ts` (8 tests passed). |
+| F-05 records | Owner can create/read records; future/out-of-period dates remain rejected; new 7-day cutoff applies only to new creation; duplicate remains 409. | `F-05-record-daily.md`; `api/tests/api/records.test.ts`; Lab 7 B-09/B-10/B-12 | CR-01 released and post-deploy checks passed. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; `records.test.ts` (19 tests passed including AC-12a 7-day cutoff). |
+| F-06/F-07 progress/history | Existing records remain readable and counted; total progress remains half-up rounded and capped at 100%. | `F-06-progress-history.md`; `progress.test.ts`; B-13 | Preserved; B-13 shows older records still counted. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; unit and API progress suites passed. |
+| F-10 build/deployment baseline | Build, migration, smoke and secret-handling checks remain reproducible. | `docs/evidence/workflow-evidence.md`; Lab 5 deployment evidence | Final deployment succeeded; local continuity rerun still pending. | [x] Confirmed by Chayanit rerun on commit `c5d3122`; API + Web build and smoke/seed tests passed. |
 
 ## Required local rerun
 
@@ -74,6 +74,19 @@ npm run test:e2e
 3 passed, 0 failed, 0 skipped
 ```
 
+### Chayanit independent rerun record
+
+The PostgreSQL service was running on Docker Compose (`localhost:5433`). Results below were run independently by Chayanit Kuntanarumitkul on commit `c5d3122` at 24 November 2026 14:05 ICT:
+
+| Command | Result | Evidence |
+|---|---|---|
+| `npm run test:unit` | PASS — 4 suites, 9 passed, 0 failed, 0 skipped | Jest output (Time: 1.887 s) |
+| `npm run test:api` | PASS — 9 suites, 56 passed, 0 failed, 0 skipped | Jest output (Time: 97.802 s) |
+| `npm run test:e2e` | PASS — 3 passed, 0 failed, 0 skipped | Playwright output (Time: 26.9 s) with runtime-relative date fixture |
+| `npm run build` | PASS — API TypeScript build and web Vite build completed | npm build output (built in 3.36s) |
+
+All test counts and results match Kulchaya's post-fix rerun exactly: 4 unit suites (9 passed), 9 API suites (56 passed), 3 E2E tests (3 passed), and successful workspace build.
+
 ## Change and finding register
 
 | ID | Source | Finding / preserved decision | Status at Issue 2 | Owner | Next action / milestone |
@@ -106,7 +119,7 @@ npm run test:e2e
 
 ## Partner review
 
-- [ ] Chayanit reviewed the continuity matrix against the actual Sprint 1 test files.
-- [ ] Chayanit reviewed the change register against Lab 5, Lab 6, and Lab 7 evidence.
-- [ ] Review comment includes concrete findings, not only “LGTM”.
+- [x] Chayanit reviewed the continuity matrix against the actual Sprint 1 test files.
+- [x] Chayanit reviewed the change register against Lab 5, Lab 6, and Lab 7 evidence.
+- [x] Review comment includes concrete findings, not only “LGTM”.
 
