@@ -13,6 +13,10 @@
 - **Depends on:** Sprint 1 F-05 records and F-06 total progress; S2-F04-R current goal revision.
 - **Data rule:** This contract does not change daily records or the revision model.
 
+**System SDS impact:** The progress read path adds a deterministic computed field
+`streak_days`; authentication, ownership middleware, persistence schema, and
+record-write paths are unchanged. No migration is required.
+
 ## Domain rule: streak
 
 1. A valid activity day is a distinct `activity_date` with a persisted daily record for the goal, within the immutable `start_date` and current active `end_date`.
@@ -54,6 +58,11 @@ The existing owner-scoped progress response is extended with computed
 
 Total progress is unchanged: `total / target * 100`, half-up rounded to one
 decimal place and capped at `100.0`.
+
+**Workflow:** the owner opens a goal, the service reads the current goal
+context and persisted records, computes the streak using the injected/system
+clock, and renders the value beside total progress. A reload repeats the same
+read and computation; it does not save a streak counter.
 
 Access behavior is unchanged: no session returns `401 SESSION_REQUIRED`, a
 Program Manager returns `403 ROLE_FORBIDDEN`, and another Participant receives

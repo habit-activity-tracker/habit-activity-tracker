@@ -13,6 +13,11 @@
 - **Depends on:** F-01, F-02, F-04, F-05, S2-F04-R goal revisions, and S2-F06-S streak.
 - **Preserved rule:** Existing records older than seven days remain readable and counted. CR-01 limits new record creation only.
 
+**System SDS impact:** Add one owner-scoped read workflow and its response
+mapping; reuse existing authentication, ownership, goal, record, and revision
+components. No schema migration, record mutation, or notification integration
+is required.
+
 ## User workflow
 
 An authenticated Participant opens an owned goal and sees its current target,
@@ -40,7 +45,7 @@ The summary contains the current goal and revision context, for example:
     "streak_days": 3
   },
   "records": [{ "activity_date": "2026-11-03", "quantity": 50 }],
-  "revisions": [{ "version_number": 2, "target": 500, "end_date": "2026-12-15" }]
+  "revisions": [{ "version_number": 2, "target": 500, "end_date": "2026-12-15", "effective_date": "2026-11-24" }]
 }
 ```
 
@@ -64,6 +69,12 @@ Permission order remains:
 
 No migration is required. The summary reads stable goal, revision, record, and
 template data. Computed total, percent, and streak are not persisted.
+
+**Workflow:** the owner opens the goal summary, the service performs the
+existing session/role/ownership checks, reads the current goal and revision
+history plus all records, computes total/percent/streak, and returns the
+summary. The UI renders loading, empty, populated, and safe error states; a
+reload repeats the read without mutating stored data.
 
 ## Acceptance criteria
 
