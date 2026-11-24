@@ -16,7 +16,7 @@ that a planned check passed without a command, output, or linked evidence.
 
 Issue 2 is complete only when:
 
-- [ ] Kulchaya reruns the original Sprint 1 journey on a clean local database.
+- [x] Kulchaya reran the local unit/API/build path on a clean Docker PostgreSQL service; the E2E journey exposed the known fixed-date fixture problem recorded as E2E-01.
 - [ ] Chayanit independently reruns the same journey and compares counts.
 - [ ] The register below is reconciled against the Lab 5–7 evidence and GitHub issues.
 - [ ] Every unresolved item has an owner, next action, and target milestone.
@@ -49,8 +49,24 @@ npm run test:e2e
 npm run build
 ```
 
-The current workspace check on 24 November 2026 showed no running Compose
-services, so no new local result is claimed in this draft.
+The initial workspace check on 24 November 2026 showed no running Compose
+services; the service was started before the rerun recorded below.
+
+### Kulchaya local rerun record
+
+The PostgreSQL service was then started with `docker compose up -d --wait
+postgres` and reported healthy on `localhost:5433`. Results below were run on
+commit `64823e9` at 24 November 2026 13:42 ICT:
+
+| Command | Result | Evidence |
+|---|---|---|
+| `npm run test:unit` | PASS — 4 suites, 9 passed, 0 failed, 0 skipped | Jest output |
+| `npm run test:api` | PASS — 9 suites, 56 passed, 0 failed, 0 skipped | Jest output |
+| `npm run test:e2e` | FAIL — 2 passed, 1 failed, 0 skipped | `e2e/journey.spec.ts` failed because the fixed `2026-11-04` record was rejected and progress remained `0.0%` |
+| `npm run build` | PASS — API TypeScript build and web Vite build completed | npm build output |
+
+The E2E failure is not hidden or counted as a pass. It confirms E2E-01 and
+must be fixed before Issue 2 can receive a final PASS decision.
 
 ## Change and finding register
 
@@ -65,7 +81,7 @@ services, so no new local result is claimed in this draft.
 | OP-02 | Lab 7 | Runtime `GIT_COMMIT_SHA` was stale although image tag/digest and Cloud Run revision provided traceability. | Remaining technical debt | Chayanit | Set/remove the variable from deployment metadata and verify; Final Delivery |
 | EV-01 | Lab 7, PR #83 | TEST-21 changed from fixed `2026-11-01` to `2026-11-04` under injected `today = 2026-11-10`; assertion purpose was unchanged. | Resolved at `f6c07fa` | Kulchaya | Preserve fixture audit and rerun evidence |
 | CI-01 | Lab 7 retrospective | CI previously did not trigger for PRs targeting the staging branch. | Delivery gate item | Chayanit | Verify `test-and-docker` on `d2-staging` before other Delivery 2 merges |
-| E2E-01 | Current source audit | `e2e/journey.spec.ts` uses fixed `2026-11-04` for goal and record creation; it has no injected clock. | Remaining; high risk | Kulchaya | Replace with runtime-relative/injected date and rerun E2E before acceptance; Final Delivery |
+| E2E-01 | Current source audit and 24 Nov rerun | `e2e/journey.spec.ts` uses fixed `2026-11-04` for goal and record creation; it has no injected clock. The rerun produced 2 passed and 1 failed because the record was rejected and progress remained `0.0%`. | Confirmed failure; blocks Issue 2 PASS | Kulchaya | Replace with runtime-relative/injected date and rerun E2E before acceptance; Final Delivery |
 | NFR-06-GAP | Lab 7 metrics | Recorded API statement coverage was 83.05%; target is at least 90% of service/domain rules plus endpoint permission coverage. | Remaining gap | Chayanit | Re-measure on the final candidate and disclose or close; Final Delivery |
 | SEC-01 | Sprint 1 limitation | No CSRF tokens or rate limiting in the accepted baseline. | Technical debt, not current scope | Team | Obtain scope approval before implementation; Sprint 3/backlog |
 | OBS-01 | Lab 7 retrospective | Structured safe application error logging is absent, slowing diagnosis of PD-03a. | Technical debt, not current scope | Team | Decide logging contract; never log passwords/private payloads; Final Delivery |
