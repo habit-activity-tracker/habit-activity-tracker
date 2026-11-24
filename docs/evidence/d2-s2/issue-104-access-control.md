@@ -51,3 +51,27 @@ curl -i "$BASE_URL/api/goals/$GOAL_ID/summary"
 Record only the status line and sanitized error code/body. The reminder-schedule
 endpoint cannot be included until Issue 9 creates it; Issue 7 remains open for
 that dependency and for the partner's curl screenshot/evidence.
+
+## Manual partner execution — Chayanit
+
+**Machine:** Darwin 23.6.0 x86_64 (local Docker Compose PostgreSQL on port 5433)
+
+**Commit:** `28d0981`
+
+**Time:** 25 November 2026, 00:07:58 ICT (UTC+07:00)
+
+**Endpoint:** `GET /api/goals/:id/summary` for an Alice-owned goal
+
+The curl requests used local cookie jars stored in a temporary directory. The
+directory was deleted after the run; no cookie, password, token, goal ID, or
+other secret is recorded here.
+
+| Caller | Expected | Actual sanitized response | Result |
+|---|---|---|---|
+| Bob (another Participant) | `404 GOAL_NOT_FOUND` | `404` — `GOAL_NOT_FOUND` | PASS |
+| Program Manager | `403 ROLE_FORBIDDEN` | `403` — `ROLE_FORBIDDEN` | PASS |
+| No session | `401 SESSION_REQUIRED` | `401` — `SESSION_REQUIRED` | PASS |
+
+The responses contained only the documented generic error messages and empty
+`details` objects. In particular, Bob's response did not disclose goal data or
+whether the Alice-owned goal exists.
