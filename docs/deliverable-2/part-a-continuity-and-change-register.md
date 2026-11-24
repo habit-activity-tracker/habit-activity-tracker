@@ -62,11 +62,17 @@ commit `64823e9` at 24 November 2026 13:42 ICT:
 |---|---|---|
 | `npm run test:unit` | PASS — 4 suites, 9 passed, 0 failed, 0 skipped | Jest output |
 | `npm run test:api` | PASS — 9 suites, 56 passed, 0 failed, 0 skipped | Jest output |
-| `npm run test:e2e` | FAIL — 2 passed, 1 failed, 0 skipped | `e2e/journey.spec.ts` failed because the fixed `2026-11-04` record was rejected and progress remained `0.0%` |
+| `npm run test:e2e` (initial rerun) | FAIL — 2 passed, 1 failed, 0 skipped | `e2e/journey.spec.ts` exposed the fixed-date problem: `2026-11-04` was rejected and progress remained `0.0%` |
 | `npm run build` | PASS — API TypeScript build and web Vite build completed | npm build output |
 
-The E2E failure is not hidden or counted as a pass. It confirms E2E-01 and
-must be fixed before Issue 2 can receive a final PASS decision.
+The initial E2E failure was not hidden or counted as a pass. E2E-01 was fixed in
+commit `1619417` by deriving the journey goal/activity date from the current
+`Asia/Bangkok` calendar date minus one day. The final rerun then passed:
+
+```text
+npm run test:e2e
+3 passed, 0 failed, 0 skipped
+```
 
 ## Change and finding register
 
@@ -81,7 +87,7 @@ must be fixed before Issue 2 can receive a final PASS decision.
 | OP-02 | Lab 7 | Runtime `GIT_COMMIT_SHA` was stale although image tag/digest and Cloud Run revision provided traceability. | Remaining technical debt | Chayanit | Set/remove the variable from deployment metadata and verify; Final Delivery |
 | EV-01 | Lab 7, PR #83 | TEST-21 changed from fixed `2026-11-01` to `2026-11-04` under injected `today = 2026-11-10`; assertion purpose was unchanged. | Resolved at `f6c07fa` | Kulchaya | Preserve fixture audit and rerun evidence |
 | CI-01 | Lab 7 retrospective | CI previously did not trigger for PRs targeting the staging branch. | Delivery gate item | Chayanit | Verify `test-and-docker` on `d2-staging` before other Delivery 2 merges |
-| E2E-01 | Current source audit and 24 Nov rerun | `e2e/journey.spec.ts` uses fixed `2026-11-04` for goal and record creation; it has no injected clock. The rerun produced 2 passed and 1 failed because the record was rejected and progress remained `0.0%`. | Confirmed failure; blocks Issue 2 PASS | Kulchaya | Replace with runtime-relative/injected date and rerun E2E before acceptance; Final Delivery |
+| E2E-01 | Current source audit and 24 Nov rerun | `e2e/journey.spec.ts` initially used fixed `2026-11-04`; commit `1619417` changed it to an `Asia/Bangkok` runtime-relative date. Final E2E rerun: 3 passed, 0 failed, 0 skipped. | Resolved for Issue 2 | Kulchaya | Preserve the runtime-relative fixture and rerun if the date/time or API clock contract changes |
 | NFR-06-GAP | Lab 7 metrics | Recorded API statement coverage was 83.05%; target is at least 90% of service/domain rules plus endpoint permission coverage. | Remaining gap | Chayanit | Re-measure on the final candidate and disclose or close; Final Delivery |
 | SEC-01 | Sprint 1 limitation | No CSRF tokens or rate limiting in the accepted baseline. | Technical debt, not current scope | Team | Obtain scope approval before implementation; Sprint 3/backlog |
 | OBS-01 | Lab 7 retrospective | Structured safe application error logging is absent, slowing diagnosis of PD-03a. | Technical debt, not current scope | Team | Decide logging contract; never log passwords/private payloads; Final Delivery |
