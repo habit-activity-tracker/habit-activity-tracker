@@ -56,7 +56,15 @@ export const runBenchmarkSeed = async (targetCount = 100000): Promise<{ count: n
     );
     const templateId = tplRes.rows[0].id;
 
-    // 3. Create benchmark goals (20 goals to cleanly distribute 100k records: 5,000 records/goal)
+    // 3. Remove only the previous dedicated benchmark fixtures.  This makes a rerun
+    // deterministic without changing normal users, templates, goals, or records.
+    await pool.query(
+      `DELETE FROM goals
+       WHERE participant_id = $1 AND template_id = $2`,
+      [userId, templateId]
+    );
+
+    // 4. Create benchmark goals (20 goals to cleanly distribute 100k records: 5,000 records/goal)
     const goalIds: string[] = [];
     const goalsCount = 20;
     const recordsPerGoal = Math.ceil(targetCount / goalsCount);
@@ -75,7 +83,7 @@ export const runBenchmarkSeed = async (targetCount = 100000): Promise<{ count: n
 
     const primaryGoalId = goalIds[0];
 
-    // 4. Batch insert daily records using multi-row inserts
+    // 5. Batch insert daily records using multi-row inserts
     console.log(`Seeding ${targetCount} daily records in batches...`);
     const startTime = Date.now();
     const batchSize = 2500;
@@ -111,7 +119,7 @@ export const runBenchmarkSeed = async (targetCount = 100000): Promise<{ count: n
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
     console.log(`\nSuccessfully seeded ${totalInserted} records in ${duration}s.`);
 
-    // 5. Verify total record count in database
+    // 6. Verify total record count in database
     const countRes = await pool.query<{ count: string }>('SELECT count(*)::text AS count FROM daily_records');
     const finalCount = parseInt(countRes.rows[0].count, 10);
     console.log(`Verified total daily_records in database: ${finalCount}`);
