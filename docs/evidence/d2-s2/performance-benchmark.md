@@ -1,5 +1,5 @@
 # Performance Benchmark Log (S2-F10-P / NFR-01)
-Timestamp: 2026-11-24T14:28:21.341Z
+Timestamp: 2026-11-24T14:58:23.489Z
 Feature: S2-F10-P (Performance evidence and 100k benchmark)
 Status: PASS
 
@@ -18,15 +18,15 @@ Status: PASS
 - Measured Requests: 1000
 
 ## Measured Latency Distribution (Server Turnaround, Excl. WAN Transfer)
-- Min: 57.99 ms
-- Average: 121.5 ms
-- p50 (Median): 94.9 ms
-- p90: 190.03 ms
-- p95: 262.63 ms (Target: <= 500 ms)
-- p99: 570.04 ms
-- Max: 1332.42 ms
+- Min: 57.03 ms
+- Average: 100.59 ms
+- p50 (Median): 79.79 ms
+- p90: 148.12 ms
+- p95: 187.46 ms (Target: <= 500 ms)
+- p99: 461.14 ms
+- Max: 983.88 ms
 
 ## Verification Outcome
 - NFR-01 Requirement: p95 <= 500 ms
-- Observed p95: 262.63 ms
+- Observed p95: 187.46 ms
 - Outcome: COMPLIANT (PASSED)

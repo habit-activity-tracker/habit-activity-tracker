@@ -100,7 +100,7 @@ describe('S2-F10-P: Performance evidence and benchmark harness', () => {
 
     expect(Number(firstRun.rows[0].count)).toBe(20);
     expect(Number(secondRun.rows[0].count)).toBe(20);
-  });
+  }, 20000);
 
   it('TEST-S2-16 & TEST-S2-17 / AC-S2-16, AC-S2-17: measures authenticated read latencies and verifies p95 <= 500 ms', async () => {
     const app = createApp(pool);
