@@ -78,7 +78,7 @@ The UI adds a focused Reminders section to the goal page with local-time input, 
 | 401 → 403 → 404 ordering (`SESSION_REQUIRED` → `ROLE_FORBIDDEN` → `GOAL_NOT_FOUND`) | ✅ | `api/src/middleware/auth.ts`, `goalOwnership.ts`, TEST-S3-08 |
 | Max 3 schedules incl. disabled → `REMINDER_SCHEDULE_LIMIT_REACHED` (409) | ✅ | TEST-S3-04 (row lock + transaction) |
 | `next_occurrence_at` strict-future, injectable clock, `APP_TIMEZONE` | ✅ | `api/src/services/reminders.ts`, TEST-S3-01/05/07 |
-| Migration additive only (`007-reminder-schedules.sql`) | ✅ | `CREATE TABLE IF NOT EXISTS` + index; no change to existing data |
+| Migration additive only (`007-reminder-schedules.sql`) | ⚠️ | `CREATE TABLE IF NOT EXISTS` + index; no change to existing data. Rollback is not supported by the current migration runner; rollback note is documented. |
 | No notification/queue/provider call | ✅ | Service, routes, and `web/src/components/ReminderSection.tsx` |
 
 ### Manual workflow test cases to capture (as Alice)
@@ -91,7 +91,7 @@ The UI adds a focused Reminders section to the goal page with local-time input, 
 
 ### Reviewer verdict
 
-All contract items from Issue #105 are implemented and verified. TDD red→green evidence present. **PR #120 is approved.** I have **not** merged it — merge into `d2-staging` is left to Chayanit to perform.
+All contract items from Issue #105 are implemented. Automated tests pass; manual workflow evidence remains pending. TDD evidence is recorded in PR #120 commit history. **PR #120 is approved.** I have **not** merged it — merge into `d2-staging` is left to Chayanit to perform.
 
 No real passwords, tokens, or secrets in this evidence or in the code under review.
 
