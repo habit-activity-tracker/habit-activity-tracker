@@ -1,8 +1,10 @@
 export interface Clock {
   today(timezone: string): string;
+  now?(): Date;
 }
 
 export const systemClock: Clock = {
+  now: () => new Date(),
   today(timezone: string): string {
     const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: timezone,
