@@ -29,6 +29,7 @@ erDiagram
     GOAL ||--o{ ACTIVITY_RECORD : contains
     USER ||--o{ REMINDER_SCHEDULE : owns
     GOAL ||--o{ REMINDER_SCHEDULE : schedules
+    GOAL ||--o{ GOAL_REVISION : versions
 
     USER {
       uuid id PK
@@ -57,6 +58,15 @@ erDiagram
       decimal target
       date start_date
       date end_date
+      integer version
+    }
+    GOAL_REVISION {
+      uuid id PK
+      uuid goal_id FK
+      integer version_number UK
+      decimal target
+      date end_date
+      date effective_date
     }
     ACTIVITY_RECORD {
       uuid id PK
@@ -115,7 +125,7 @@ Status codes: 200 read/update, 201 create, 204 logout, 400 validation, 401 missi
 | POST | `/api/goals/:id/reminder-schedules` | Participant creates one of at most three owner-scoped reminder schedules. |
 | GET | `/api/goals/:id/reminder-schedules` | Participant lists schedules and read-time `next_occurrence_at`. |
 
-## 6. Role/permission matrix for every Sprint 1 endpoint
+## 6. Role/permission matrix for implemented endpoints
 
 `PM` = Program Manager, `P` = Participant, `Auth` = any authenticated user, `—` = not permitted.
 
