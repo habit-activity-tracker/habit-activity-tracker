@@ -27,7 +27,6 @@ erDiagram
     USER ||--o{ GOAL : owns
     ACTIVITY_TEMPLATE ||--o{ GOAL : selected_for
     GOAL ||--o{ ACTIVITY_RECORD : contains
-    USER ||--o{ REMINDER_SCHEDULE : owns
     GOAL ||--o{ REMINDER_SCHEDULE : schedules
     GOAL ||--o{ GOAL_REVISION : versions
 
@@ -115,7 +114,7 @@ Status codes: 200 read/update, 201 create, 204 logout, 400 validation, 401 missi
 | PATCH | `/api/templates/:id` (alias: `/api/activity-templates/:id`) | Manager updates allowed metadata; rejects `unit`. |
 | POST | `/api/goals` | Participant creates goal. |
 | GET | `/api/goals` | Participant lists own goals. |
-| GET | `/api/goals/:id` | Participant retrieves own goal, summary, and permitted history. |
+| GET | `/api/goals/:id` | Participant retrieves their own goal. |
 | POST | `/api/goals/:id/records` | Participant creates one daily record. |
 | GET | `/api/goals/:id/records` | Participant lists own goal records. |
 | GET | `/api/goals/:id/progress` | Participant receives computed progress. |
