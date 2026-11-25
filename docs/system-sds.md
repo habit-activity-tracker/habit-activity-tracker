@@ -141,7 +141,7 @@ Status codes: 200 read/update, 201 create, 204 logout, 400 validation, 401 missi
 
 The automated matrix tests both cross-participant access and a participant attempting to edit a shared template. No role receives consent-based sharing in Sprint 1.
 
-## 9. Delivery 2 architecture, verification, and coverage gaps
+## Delivery 2 architecture, verification, and coverage gaps
 
 Delivery 2 keeps the same web/API/database boundary and adds three owner-scoped capabilities. S2 goal revisions append a `goal_revisions` row and update the current goal version in one transaction; existing daily records are not rewritten. The S2 summary reads records and revisions, calculates capped progress and the current streak with an injected clock, and returns the owner's history. S3 reminder schedules are persisted in the additive `reminder_schedules` migration and calculate `next_occurrence_at` at read time; no notification dispatcher, queue, email, push, webhook, or provider integration exists.
 
