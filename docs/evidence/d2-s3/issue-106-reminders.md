@@ -66,11 +66,11 @@ The UI adds a focused Reminders section to the goal page with local-time input, 
 
 *Figure 1. Alice's active goal before creating reminder schedules.*
 
-![Saved reminder display showing 08:30 ICT on Monday, Wednesday, and Friday.](./03-persistence-after-reload.png)
+![Saved reminder display showing 08:30 ICT on Monday, Wednesday, and Friday.](./02-create-and-next-occurrence.png)
 
 *Figure 2. The reminder UI confirms the Monday/Wednesday/Friday schedule was saved.*
 
-![Reloaded reminder UI still lists the persisted reminder schedule.](./02-create-and-next-occurrence.png)
+![Reloaded reminder UI still lists the persisted reminder schedule.](./03-persistence-after-reload.png)
 
 *Figure 3. Reloaded UI confirms reminder persistence.*
 
