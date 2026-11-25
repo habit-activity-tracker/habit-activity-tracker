@@ -39,7 +39,7 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | FR-13 | Two goals based on the same template shall maintain separate daily records and progress. | Isolation test with two goals. | S1 |
 | FR-14 | Participant history, goals, records, and progress shall be private; managers shall not gain access by role alone. | Cross-role and cross-participant access tests. | S1 |
 | FR-15 | The UI shall present goals, entry forms, history, and computed progress with shared loading, empty, and error states. | Component and end-to-end UI checks. | S1 |
-| FR-16 | A participant shall create and list up to three owner-scoped reminder schedules for an active goal. The system shall compute strict-future next occurrence in `APP_TIMEZONE` and shall not send notifications. | API schedule, access-control, and no-dispatch tests. | S3 |
+| FR-16 | The system shall expose reminder/schedule representation as a future placeholder without sending notifications. | SDS contract review and no-dispatch test. | S3 |
 
 ### 5. Business rules
 
@@ -54,7 +54,7 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | BR-07 | Dates are calendar dates in `APP_TIMEZONE` (`Asia/Bangkok`); future dates and dates more than 7 calendar days before today are rejected. | Time-zone and retrospective-window boundary tests. | S1 / Lab 7 v1.1 |
 | BR-08 | A goal may start today or earlier; its end date must be on or after its start date. | Goal date tests. | S1 |
 | BR-09 | A record date must fall within the goal's inclusive start/end dates; the retrospective seven-day rule also applies. | Out-of-period and retrospective-window tests. | S1 / Lab 7 v1.1 |
-| BR-10 | Direct goal edit/delete remains unavailable; Sprint 2 permits only versioned owner-scoped goal revisions. Template unit is not editable; PATCH rejects `unit`. | Revision, method, and field rejection tests. | S1–S2 |
+| BR-10 | Sprint 1 permits no goal edit or delete; goal revisions are Sprint 2. Template unit is not editable; PATCH rejects `unit`. | Method/field rejection tests. | S1 |
 | BR-11 | Participant data is private. There is no consent-based sharing in the baseline, and Program Managers have no access to participant goals, records, or progress. | Permission matrix and API tests. | S1 |
 
 ### 6. Non-functional requirements
@@ -113,23 +113,4 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | What does F-11 include? | Resolved by Thursday workshop: placeholder representation only, in AD-17. |
 | What timezone defines “today”? | Resolved: configured `APP_TIMEZONE`, default Asia/Bangkok, in AD-10. |
 | What notification channels are required? | Deferred with F-11; none are sent in the baseline. |
-
-## Part D — Delivery 2 product update
-
-### Implemented scope and approved change
-
-- **Goal revisions (Sprint 2):** a participant may create an owner-scoped, versioned revision of target/end date. Records remain immutable; revision history is readable with the goal summary.
-- **Streak and history summary (Sprint 2):** the owner-only summary exposes total, capped progress, deterministic streak, records, and revisions. Existing older records remain readable; CR-01 limits only new record creation.
-- **Reminder schedules (Sprint 3):** an owner may create/list up to three schedules per active goal. A schedule has `HH:MM`, unique ISO weekdays, an enabled flag, and a strict-future `next_occurrence_at` in `APP_TIMEZONE`. No notification, queue, provider, channel, or opt-in behavior is implemented (AD-15/AD-17).
-- **CR-01:** new daily records are permitted from today through seven calendar days before today in `APP_TIMEZONE`; older records are rejected. This approved change preserves all goal-period, ownership, and duplicate rules.
-
-### Delivery 2 verification status
-
-| Requirement area | Actual evidence | Result / version |
-|---|---|---|
-| NFR-01 performance | `docs/evidence/d2-s2/performance-benchmark.md`: 100,002 rows, 1,000 measured authenticated reads, p95 187.46 ms | PASS against <=500 ms, S2-F10-P / `5b6353e` |
-| F-11 / FR-16 | `api/tests/api/reminder-schedules.test.ts`; `docs/evidence/d2-s3/issue-106-reminders.md` | PASS, PR #120 merged at `7e8ca5b` |
-| CR-01 | `api/tests/api/records.test.ts`; Part A continuity/change register | Implemented and regression-evidenced; preserve final rerun evidence |
-| NFR-06 | Lab 7 recorded API statement coverage 83.05% | GAP: below 90%; re-measurement remains planned, not PASS |
-| NFR-07 | `S3-F10-O-operational-readiness.md` | Planned final deployment/restore verification |
 
