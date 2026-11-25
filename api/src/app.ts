@@ -36,10 +36,10 @@ export const createApp = (pool: Pool = getPool(), clock: Clock = systemClock): E
   const templatesRouter = createTemplatesRouter(pool, loadConfig());
   app.use('/api/activity-templates', templatesRouter);
   app.use('/api/templates', templatesRouter);
-  const goalsRouter = createGoalsRouter(pool, loadConfig());
+  const goalsRouter = createGoalsRouter(pool, loadConfig(), clock);
   app.use('/api/goals', goalsRouter);
   app.use('/api/goals/:id/records', createRecordsRouter(pool, loadConfig(), clock));
-  app.use('/api/goals/:id/progress', createProgressRouter(pool, loadConfig()));
+  app.use('/api/goals/:id/progress', createProgressRouter(pool, loadConfig(), clock));
 
   // Docker supplies the compiled React bundle here. Keeping this opt-in means
   // API tests and local Vite development continue to use their usual setup.

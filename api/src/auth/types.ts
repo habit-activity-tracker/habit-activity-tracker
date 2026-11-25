@@ -11,5 +11,5 @@ export interface SafeUser {
 export interface AuthenticatedRequest extends Request {
   user?: SafeUser;
   sessionId?: string;
-  goal?: { id: string; participant_id: string; template_id: string; target: number; start_date: string; end_date: string };
+  goal?: { id: string; participant_id: string; template_id: string; target: number; start_date: string; end_date: string; version?: number };
 }

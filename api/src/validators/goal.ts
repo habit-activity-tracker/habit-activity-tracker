@@ -34,3 +34,22 @@ export const validateGoal = (input: unknown, timezone: string): GoalValidationRe
   if (Object.keys(details).length) return { valid: false, details };
   return { valid: true, value: { template_id: body.template_id as string, target: body.target as number, start_date: body.start_date as string, end_date: body.end_date as string } };
 };
+
+export interface GoalRevisionInput { target: number; end_date: string; }
+export type GoalRevisionValidationResult = { valid: true; value: GoalRevisionInput } | { valid: false; details: Record<string, string> };
+
+const revisionAllowedFields = new Set(['target', 'end_date']);
+
+export const validateGoalRevision = (input: unknown, goalStartDate?: string): GoalRevisionValidationResult => {
+  const details: Record<string, string> = {};
+  if (!input || typeof input !== 'object' || Array.isArray(input)) return { valid: false, details: { body: 'A revision object is required.' } };
+  const body = input as Record<string, unknown>;
+  for (const key of Object.keys(body)) if (!revisionAllowedFields.has(key)) details[key] = 'This field is not allowed.';
+  if (typeof body.target !== 'number' || !Number.isFinite(body.target) || body.target <= 0) details.target = 'Target must be a positive number.';
+  if (typeof body.end_date !== 'string' || !validDate(body.end_date)) details.end_date = 'End date must be a valid calendar date.';
+  if (typeof body.end_date === 'string' && validDate(body.end_date) && goalStartDate && validDate(goalStartDate) && body.end_date < goalStartDate) {
+    details.end_date = 'End date must be on or after start date.';
+  }
+  if (Object.keys(details).length) return { valid: false, details };
+  return { valid: true, value: { target: body.target as number, end_date: body.end_date as string } };
+};
