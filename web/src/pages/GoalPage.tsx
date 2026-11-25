@@ -3,6 +3,7 @@ import { RecordForm } from '../components/RecordForm';
 import type { ActivityTemplate } from '../components/TemplateSelector';
 import { ProgressBar } from '../components/ProgressBar';
 import { HistoryTable } from '../components/HistoryTable';
+import { ReminderSection } from '../components/ReminderSection';
 
 interface Goal { id: string; template_id: string; target: number; start_date: string; end_date: string; version?: number; }
 interface DailyRecord { id: string; activity_date: string; quantity: number; }
@@ -55,5 +56,6 @@ export const GoalPage = ({ goal }: { goal: Goal }) => {
       {template ? <RecordForm goalId={goal.id} minValue={template.min_value} maxValue={template.max_value} unit={template.unit} onSaved={() => { void load(); }} /> : <p role="alert">The activity template is unavailable.</p>}
     </div>
     <div className="card"><h4>History</h4><HistoryTable records={records} unit={unit} /></div>
+    <ReminderSection goalId={goal.id} />
   </section>;
 };

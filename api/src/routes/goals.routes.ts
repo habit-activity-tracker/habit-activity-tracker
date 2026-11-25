@@ -10,6 +10,8 @@ import { isUuid, validateGoal, validateGoalRevision } from '../validators/goal.j
 import { calculateProgress } from '../services/progress.js';
 import { calculateStreak } from '../services/streak.js';
 import { systemClock, type Clock } from '../utils/clock.js';
+import { validateReminder } from '../validators/reminder.js';
+import { isoTimestamp, nextOccurrence } from '../services/reminders.js';
 
 const goalColumns = "id, participant_id, template_id, target, to_char(start_date, 'YYYY-MM-DD') AS start_date, to_char(end_date, 'YYYY-MM-DD') AS end_date, COALESCE(version, 1) AS version, created_at, updated_at";
 const mapGoal = (row: Record<string, unknown>) => ({ ...row, target: Number(row.target), start_date: String(row.start_date), end_date: String(row.end_date), version: Number(row.version ?? 1) });
@@ -70,6 +72,38 @@ export const createGoalsRouter = (pool: Pool, config: AppConfig, clock: Clock = 
         records,
         revisions,
       });
+    } catch (error) { next(error); }
+  });
+
+  const reminderColumns = "id, goal_id, to_char(local_time, 'HH24:MI') AS local_time, days_of_week, enabled, created_at, updated_at";
+  const mapReminder = (row: Record<string, unknown>, goalEndDate: string) => {
+    const schedule = { id: String(row.id), goal_id: String(row.goal_id), local_time: String(row.local_time), days_of_week: (row.days_of_week as number[]).map(Number), enabled: Boolean(row.enabled), created_at: isoTimestamp(row.created_at), updated_at: isoTimestamp(row.updated_at) };
+    return { ...schedule, next_occurrence_at: nextOccurrence(schedule, goalEndDate, clock, config.appTimezone) };
+  };
+  router.post('/:id/reminder-schedules', requireAuth(authService), requireRole('participant'), requireOwnedGoal(pool), async (request, response, next) => {
+    try {
+      const goal = (request as AuthenticatedRequest).goal!;
+      const validation = validateReminder(request.body);
+      if (!validation.valid) throw new AppError(400, ErrorCode.INVALID_REMINDER_SCHEDULE, 'The reminder schedule is invalid.', validation.details);
+      const today = clock.today(config.appTimezone);
+      if (goal.end_date < today) throw new AppError(409, ErrorCode.GOAL_ENDED, 'The goal has already ended.');
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        await client.query('SELECT id FROM goals WHERE id = $1 FOR UPDATE', [goal.id]);
+        const count = await client.query('SELECT COUNT(*)::int AS count FROM reminder_schedules WHERE goal_id = $1', [goal.id]);
+        if (count.rows[0].count >= 3) throw new AppError(409, ErrorCode.REMINDER_SCHEDULE_LIMIT_REACHED, 'The goal already has three reminder schedules.');
+        const result = await client.query(`INSERT INTO reminder_schedules (goal_id, local_time, days_of_week, enabled) VALUES ($1, $2, $3, $4) RETURNING ${reminderColumns}`, [goal.id, validation.value.local_time, validation.value.days_of_week, validation.value.enabled]);
+        await client.query('COMMIT');
+        response.status(201).json({ schedule: mapReminder(result.rows[0], goal.end_date) });
+      } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+    } catch (error) { next(error); }
+  });
+  router.get('/:id/reminder-schedules', requireAuth(authService), requireRole('participant'), requireOwnedGoal(pool), async (request, response, next) => {
+    try {
+      const goal = (request as AuthenticatedRequest).goal!;
+      const result = await pool.query(`SELECT ${reminderColumns} FROM reminder_schedules WHERE goal_id = $1 ORDER BY created_at ASC, id ASC`, [goal.id]);
+      response.status(200).json({ schedules: result.rows.map((row) => mapReminder(row, goal.end_date)) });
     } catch (error) { next(error); }
   });
 
