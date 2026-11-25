@@ -35,14 +35,14 @@ export const ReminderSection = ({ goalId }: { goalId: string }) => {
   const toggleDay = (day: number) => setDays((current) => current.includes(day) ? current.filter((item) => item !== day) : [...current, day].sort((a, b) => a - b));
   return <section className="card" aria-label="Reminders">
     <h4>Reminders</h4>
-    {schedules.length === 0 ? <p className="muted">No reminders scheduled.</p> : <ul aria-label="Saved reminders">{schedules.map((schedule) => <li key={schedule.id}>
+    {schedules.length === 0 ? <p className="muted">No reminders scheduled.</p> : <ul className="reminder-list" aria-label="Saved reminders">{schedules.map((schedule) => <li key={schedule.id}>
       <strong>{schedule.local_time} ICT</strong> · {schedule.days_of_week.map((day) => weekdayLabels[day - 1]).join(', ')} · {schedule.enabled ? 'Enabled' : 'Disabled'}
       <span className="muted"> — Next: {formatNextOccurrence(schedule.next_occurrence_at)}</span>
     </li>)}</ul>}
     {schedules.length < 3 && <form onSubmit={submit} aria-label="Create reminder">
       <label>Local time<input type="time" value={time} onChange={(event) => setTime(event.target.value)} required /></label>
-      <fieldset><legend>Days</legend>{weekdayLabels.map((label, index) => <label key={label}><input type="checkbox" checked={days.includes(index + 1)} onChange={() => toggleDay(index + 1)} />{label}</label>)}</fieldset>
-      <label><input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} /> Enabled</label>
+      <fieldset className="reminder-days"><legend>Days</legend>{weekdayLabels.map((label, index) => <label className="reminder-day" key={label}><input type="checkbox" checked={days.includes(index + 1)} onChange={() => toggleDay(index + 1)} />{label}</label>)}</fieldset>
+      <label className="reminder-enabled"><input type="checkbox" checked={enabled} onChange={(event) => setEnabled(event.target.checked)} /> <span>Enabled</span></label>
       {message && <p role="status" aria-live="polite">{message}</p>}
       <button type="submit" disabled={saving || days.length === 0}>{saving ? 'Saving…' : 'Add reminder'}</button>
     </form>}
