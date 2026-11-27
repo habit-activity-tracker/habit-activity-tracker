@@ -4,7 +4,7 @@
 **Base:** `d3-staging` at `cf8ce75`  
 **Date:** 27 November 2026 (Asia/Bangkok)  
 **Lead:** Kulchaya  
-**Reviewer:** Chayanit (pending review)
+**Reviewer:** Chayanit (approved after independent retest)
 
 ## Scope
 
@@ -41,8 +41,22 @@ API and Web build passed
 
 No tests were skipped, deleted, or weakened. The API total increased by three tests: `TEST-01.9`, `TEST-S3-09`, and `TEST-AC-43`.
 
+## Partner retest and review
+
+| Item | Result |
+|---|---|
+| Reviewer | Chayanit |
+| Commit tested | `a403049ea53d4b5a29d74dfd1401a40b8358f5c8` |
+| Unit tests | 6 suites, 18 passed, 0 failed, 0 skipped |
+| API tests | 14 suites, 82 passed, 0 failed, 0 skipped |
+| E2E tests | 3 passed, 0 failed, 0 skipped |
+| Build | API and Web passed |
+| Review | Approved after independent retest |
+| PR | #139 |
+
+Chayanit verified the RED → GREEN → evidence chain, the three Issue 2 test/fix areas, and the reported results. No additional defect was found.
+
 ## Remaining evidence
 
-- Chayanit must rerun the relevant tests and provide substantive PR review.
 - Manual deployed F-11 UI acceptance evidence is tracked separately; this document does not claim browser acceptance.
 - Issue #89 should be closed only after the GREEN change is reviewed and merged.
