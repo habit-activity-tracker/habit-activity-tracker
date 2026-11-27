@@ -1,6 +1,6 @@
 # Delivery 3 — Access Matrix
 
-**Version:** `e2a0161` (`test/d3-access-matrix`)  
+**Version:** `833e622` (review evidence; script introduced at `e2a0161`)  
 **Branch:** `test/d3-access-matrix`  
 **Base:** `8f2ca85` (`d3-staging`, after Issue 2)  
 **Lead:** Chayanit | **Reviewer:** Kulchaya  
@@ -9,12 +9,12 @@
 ### Execution summary
 
 - **Local Docker (`http://localhost:8080`, `e2a0161`):** **74/74 PASS** (`fail=0`) — see [access-check-docker.txt](access-check-docker.txt).
-- **Cloud Run (`https://habit-tracker-860543640437.asia-southeast1.run.app`, `v0.2.0` pre-RC):** **73/74 PASS, 1 FAIL** (`fail=1`) — see [access-check-cloudrun.txt](access-check-cloudrun.txt). The single `FAIL` is `E-01 malformed JSON login` (`expected=400 actual=500`) because Cloud Run is still serving `v0.2.0` (`main`) before Issue 2's PD-03a fix (`5ba5905`) is deployed in Issue 7 (RC deploy).
+- **Cloud Run (`habit-tracker-00014-ntq`, 100% traffic):** **74/74 PASS** (`fail=0`) — see [access-check-cloudrun-kulchaya.txt](access-check-cloudrun-kulchaya.txt). The earlier `access-check-cloudrun.txt` remains historical pre-RC evidence from `00013-vwx`, where malformed JSON returned 500 before the Issue 2 fix was deployed.
 
 | Endpoint(s) | AC / feature | No session | Wrong role | Other participant record | Valid role/owner | Actual / result |
 |---|---|---|---|---|---|---|
 | E-00a `GET /api/health`, E-00b `GET /api/ready` | OP-01 | 200 | n/a | n/a | 200 | PASS (Docker 200; Cloud Run 200) |
-| E-01 `POST /api/auth/login` | AC-01, AC-02, AC-02a, AC-02b | 200 valid; 400 malformed JSON; 401 bad password | n/a | n/a | 200 valid credentials | Docker: PASS (400/401/200); Cloud Run: 401/200 PASS, malformed JSON 500 FAIL (`v0.2.0` pre-RC) |
+| E-01 `POST /api/auth/login` | AC-01, AC-02, AC-02a, AC-02b; PD-03a | 200 valid; 400 malformed JSON; 401 bad password | n/a | n/a | 200 valid credentials | PASS (Docker and Cloud Run: 400/401/200) |
 | E-02 `GET /api/auth/me`, E-04 `GET /api/me` | AC-03, AC-04 | 401 `SESSION_REQUIRED` | n/a | n/a | 200 caller only | PASS (Docker & Cloud Run) |
 | E-03 `POST /api/auth/logout` | AC-05 | 401 `SESSION_REQUIRED` | n/a | n/a | 204 (then `/me` 401) | PASS (Docker & Cloud Run) |
 | E-05/E-05b `POST /api/activity-templates`, `/api/templates` | AC-31, AC-32 | 401 | participant: 403 | n/a | manager: 201 | PASS (Docker & Cloud Run) |
@@ -39,7 +39,7 @@ For E-10–E-18 with a malformed goal ID, current code expects `401` without a s
 
 ## PDF excerpt
 
-- **Setup:** Synthetic seeded accounts (`pm1@example.com`, `alice@example.com`, `bob@example.com`) via `scripts/access-check.sh` against Cloud Run (`e2a0161`, 27 Nov 2026); Alice creates goal `eafb9f74-a55e-4264-818e-28f68a56b039`.
+- **Setup:** Synthetic seeded accounts (`pm1@example.com`, `alice@example.com`, `bob@example.com`) via `scripts/access-check.sh` against Cloud Run revision `habit-tracker-00014-ntq` (27 Nov 2026); Alice creates a synthetic goal. The raw redacted run is in `access-check-cloudrun-kulchaya.txt`.
 - **Assertion (E-13 `GET /api/goals/:id/revisions`):** Unauthenticated → `401`; Program Manager → `403`; Bob (other participant) → `404`; Alice (owner) → `200`.
 - **Result:**
   ```text
