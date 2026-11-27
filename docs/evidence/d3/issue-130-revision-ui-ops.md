@@ -1,6 +1,6 @@
 # Issue 130 — Revision UI and operations evidence
 
-- **Version:** `b998e86` (`feature/d3-revision-ui-ops`)
+- **Version:** `1c86df4` (`feature/d3-revision-ui-ops`)
 - **Role:** Chayanit (lead)
 - **Date:** 27 November 2026 (Asia/Bangkok)
 - **Status:** local implementation checks passed; deployment evidence is pending and is not claimed as PASS.
@@ -11,8 +11,14 @@
 |---|---|
 | `npm run build` | PASS — API TypeScript build and web production build completed. |
 | `npm run test:unit` | PASS — 6 suites, 19 tests. |
-| `npm run test:e2e -- e2e/revision.spec.ts` | PASS — 1 revision workflow browser test. The spec stubs API responses deliberately; backend persistence, ownership, validation and record-integrity checks remain in `api/tests/api/goals.revision.test.ts`. |
-| `npm run test:api` | NOT RUN to completion — local PostgreSQL test service at `localhost:5433` was unavailable (`ECONNREFUSED`), and Docker Desktop was not running. This is an environment blocker, not a PASS or a timeout result. |
+| `npm run test:api` | PASS — 14 suites, 83 tests, independently rerun by Kulchaya. |
+| `npm run test:e2e` | PASS — 4 tests. This includes the revision workflow browser test. Its API responses are stubbed deliberately; backend persistence, ownership, validation and record-integrity remain covered by `api/tests/api/goals.revision.test.ts`. |
+
+## Regression found and fixed before approval
+
+Kulchaya's review found a full-E2E failure: `e2e/journey.spec.ts` expected `50.0%` but observed `1.0%`. The test clicked the last generic `Record activity` button immediately after goal creation, before the new goal list had settled; it could therefore select an existing goal with a different target or permitted date range.
+
+The fix selects the newly created goal by its API-returned ID, ignores stale goal-list responses, and changes the E2E assertion to wait for the created goal rather than using `.last()`. Adding Revision history also made the generic table selector ambiguous; it now targets the named Activity history table. The final full browser run passed 4/4.
 
 ## Deployment evidence still required
 
