@@ -49,7 +49,7 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | FR-13 | Two goals on same template keep separate records and progress | F-05/F-07 | S1 | **DONE** | `records.test.ts`; `c5d3122` |
 | FR-14 | Participant history/goals/records are private; managers cannot access by role | F-02/F-07 | S1–S3 | **DONE** | `access-control.sprint2.test.ts`; `reminder-schedules.test.ts`; `7e8ca5b` |
 | FR-15 | UI presents goals, entry forms, history, and progress with shared states | F-07 | S1–S2 | **PARTIAL** | E2E 3/3 passed; AC-34/38/44/50 lack component-level automated tests (GAP-02) |
-| FR-16 | Participant creates/lists up to 3 reminder schedules per active goal; strict-future next occurrence computed; no notifications sent | F-11 | S3 | **PARTIAL** | `reminder-schedules.test.ts` 6 passed; AC-S3-09 (no-dispatch proof) not yet written (Issue 2) |
+| FR-16 | Participant creates/lists up to 3 reminder schedules per active goal; strict-future next occurrence computed; no notifications sent | F-11 | S3 | **DONE** | `reminder-schedules.test.ts` includes TEST-S3-09 no-dispatch proof; `ca4aad5` |
 
 ### Business Rules
 
@@ -64,8 +64,8 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | BR-07 | Date boundary in APP_TIMEZONE (Asia/Bangkok) | F-05/F-08 | S1/CR-01 | **CHANGED** | CR-01 implementation in `records.test.ts`; `c5d3122` |
 | BR-08 | Goal date rules (start ≤ end, etc.) | F-04 | S1 | **DONE** | `goals.test.ts`; `c5d3122` |
 | BR-09 | Record date must be within goal period | F-05 | S1/CR-01 | **CHANGED** | CR-01 implementation in `records.test.ts`; `c5d3122` |
-| BR-10 | Template unit is immutable; goal lifecycle is versioned | F-03/F-04 | S1–S2 | **DONE** | `templates.update.test.ts`; `goals.revision.test.ts`; `7f04dbd` |
-| BR-11 | Participant data is private; no cross-role sharing; F-11 scope is schedules only (no notifications) | F-02/F-11 | S1–S3 | **PARTIAL** | Access tests pass; AC-S3-09 no-dispatch not yet automated (Issue 2) |
+| BR-10 | Template unit is immutable; direct goal PATCH/DELETE is absent; goal lifecycle is versioned | F-03/F-04 | S1–S2 | **DONE** | `templates.update.test.ts`; `goals.test.ts` TEST-AC-43; `goals.revision.test.ts`; `ca4aad5` |
+| BR-11 | Participant data is private; no cross-role sharing; F-11 scope is schedules only (no notifications) | F-02/F-11 | S1–S3 | **DONE** | access suite plus `reminder-schedules.test.ts` TEST-S3-09; `ca4aad5` |
 
 ### Non-Functional Requirements
 
@@ -75,9 +75,9 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | NFR-02 | Protected endpoints require valid session and correct role | 401/403 on all protected endpoints | **DONE** | `access-control.sprint2.test.ts`; `reminder-schedules.test.ts`; `7e8ca5b` |
 | NFR-03 | Passwords not stored or logged in plaintext (bcrypt) | No plaintext credential in logs/DB | **PARTIAL** | bcrypt storage confirmed in `auth.test.ts`; log-plaintext inspection (AC-06/GAP-03) not yet evidenced — Issue 4 |
 | NFR-04 | UTC persistence; calendar dates interpreted in APP_TIMEZONE | Timezone correct | **DONE** | `records.test.ts`; `c5d3122` |
-| NFR-05 | Stable JSON error codes for all validation/ownership errors | Stable error codes | **PARTIAL** | Existing validator tests pass, but PD-03a still returns `500`; AC-02b/TEST-01.9 are required in Issue 2. |
-| NFR-06 | API test statement coverage ≥ 90% of service/domain rules + all permission cases | ≥ 90% | **PARTIAL** | Lab 7 measured 83.05%; re-measurement pending after Issues 2 and 4 — Issue 5/GAP-05 |
-| NFR-07 | Recovery: RPO ≤ 24 h, RTO ≤ 4 h; documented isolated restore | RPO ≤ 24 h; RTO ≤ 4 h | **PARTIAL** | Secret injection is in place; isolated restore evidence is pending — Issue 5/GAP-06 |
+| NFR-05 | Stable JSON error codes for all validation/ownership errors | Stable error codes | **DONE** | Validator/API contracts and TEST-01.9 cover the shared `400 INVALID_JSON` envelope; `5ba5905`. |
+| NFR-06 | API test statement coverage ≥ 90% of service/domain rules + all permission cases | ≥ 90% | **PARTIAL** | Issue 5: 83 API tests passed; service/domain statements 88.24%, below target. AC-S3-13 is not PASS. |
+| NFR-07 | Recovery: RPO ≤ 24 h, RTO ≤ 4 h; documented isolated restore | RPO ≤ 24 h; RTO ≤ 4 h | **PARTIAL** | GAP-06 isolated restore completed: RTO 57m22s PASS; full RPO remains unproven because no incident interval was measured. |
 
 ### Feature inventory and retained debt
 
@@ -119,9 +119,9 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 
 | Delivery ID | Description | Status | Evidence |
 |---|---|---|---|
-| S3-F11-R | Reminder schedules: create/list, next-occurrence computed | **PARTIAL** | 6/9 ACs evidenced; AC-S3-09 no-dispatch proof missing (Issue 2) |
-| S3-F10-O | Operational readiness: secret management, isolated restore | **NOT DONE** | Evidence not yet produced — Issue 5 and Issue 7 |
-| S3-F10-Q | Verification hardening: coverage ≥ 90%, full permission matrix | **NOT DONE** | Coverage 83.05%; permission matrix incomplete — Issues 2 and 5 |
+| S3-F11-R | Reminder schedules: create/list, next-occurrence computed | **DONE** | API test includes TEST-S3-09 no-dispatch proof; `ca4aad5` |
+| S3-F10-O | Operational readiness: secret management, isolated restore | **PARTIAL** | GAP-06 isolated restore completed; RTO passes but full RPO evidence remains incomplete. |
+| S3-F10-Q | Verification hardening: coverage ≥ 90%, full permission matrix | **PARTIAL** | Access matrix passed; Issue 5 measured 88.24% service/domain statements, below 90%; AC-S3-13 is not PASS. |
 
 ---
 
@@ -129,16 +129,16 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 
 | ID | Source | Description | Owner | Due | Blocking issue(s) |
 |---|---|---|---|---|---|
-| GAP-01 | AC-43 | `PATCH` and `DELETE /api/goals/:id` must return `404 ROUTE_NOT_FOUND`; D2 recorded no automated test. Write meaningful assertions in Issue 2. | Kulchaya | 2 Dec | Issue 2 |
+| GAP-01 | AC-43 | **Closed:** `goals.test.ts` TEST-AC-43 asserts `PATCH` and `DELETE /api/goals/:id` return `404 ROUTE_NOT_FOUND`. | Kulchaya | Completed 27 Nov | Issue 2 |
 | GAP-02 | Traceability | AC-34, AC-38, AC-44, and AC-50 have no component-level automated test. Add or mark INCOMPLETE in final matrix. | Kulchaya | 5 Dec | Issue 5 |
 | GAP-03 | NFR-03 / AC-06 | Authentication source inspection found no submitted-password logging; Cloud Run log inspection for the deployed revision is still required and has not been executed. | Chayanit | 3 Dec | Issue 4 |
 | GAP-04 | AC-07 | API tests verify `Secure`, `HttpOnly`, `SameSite=Lax`, and `Max-Age`; inspect the deployed `Set-Cookie` header and record actual expiry. | Chayanit | 3 Dec | Issue 4 |
-| GAP-05 | NFR-06 | API statement coverage is 83.05%; target is ≥ 90%. Re-measure after Issues 2 and 4 on a commit close to final. If still below, record honestly and state plan. | Kulchaya | 5 Dec | Issue 5 |
-| GAP-06 | NFR-07 | Isolated restore exercise not done. Must use a separate Cloud SQL target; never overwrite production. Measure RTO and RPO. | Chayanit | 2 Dec (start), 5 Dec (close) | Issue 5 |
-| GAP-07 | S2-F04-R | Revise goal UI not built in Delivery 2. **Decision: BUILD the UI** in Delivery 3 (see §4); implementation is on `feature/d3-revision-ui-ops`, pending review. | Chayanit | 3 Dec | Issue 4 |
-| GAP-08 | S3-F11-R | AC-S3-09 (no-dispatch proof) has no automated test. TEST-S3-09 must be written and enabled. | Kulchaya | 2 Dec | Issue 2 |
+| GAP-05 | NFR-06 | **Measured:** Issue 5 recorded 88.24% service/domain statements against the ≥90% target (83 API tests passed). Retain as incomplete; AC-S3-13 is not PASS. | Kulchaya | Measured 27 Nov | Issue 5 |
+| GAP-06 | NFR-07 | **Completed:** isolated Cloud SQL restore target reached API readiness in 57m22s without touching source/production. Retain NFR-07 as PARTIAL until a complete RPO incident interval is measured. | Chayanit | Completed 27 Nov | Issue 5 |
+| GAP-07 | S2-F04-R | **Closed:** Revise goal UI was implemented and merged in Issue 130; local unit/API/E2E/build evidence is recorded in `issue-130-revision-ui-ops.md`. | Chayanit | Completed 27 Nov | Issue 4 |
+| GAP-08 | S3-F11-R | **Closed:** TEST-S3-09 is enabled in `reminder-schedules.test.ts` and asserts zero outbound fetch calls on create/list/compute. | Kulchaya | Completed 27 Nov | Issue 2 |
 | GAP-09 | Traceability (D2) | Rows FR-10, BR-04, BR-06, NFR-01 cite wrong/vague test files; BR-10/BR-11 have insufficient PASS evidence. Correct them in the final matrix. | Chayanit | 7 Dec | Issue 6 |
-| PD-03a | Lab 7 / AC-02b | Invalid JSON to `POST /api/auth/login` returned `500 INTERNAL_ERROR`. Implement AC-02b and TEST-01.9 by RED/GREEN commits; Issue #89 closes on GREEN. | Kulchaya | 2 Dec | Issue 2 |
+| PD-03a | Lab 7 / AC-02b | **Closed:** malformed JSON returns the shared `400 INVALID_JSON` response; RED/GREEN evidence is in `issue-2-tests-fixes.md`. | Kulchaya | Completed 27 Nov | Issue 2 |
 | OP-01 | Lab 7 | Smoke credentials were not configured and the authenticated check was skipped. The deployment now fails unless private smoke credentials are configured and runs login, `/api/me`, and logout; deployment execution is still required. | Chayanit | 3 Dec | Issue 4 |
 | OP-02 | Lab 7 | `GIT_COMMIT_SHA` was stale. The release now sets it from the image SHA and reports it through health/UI; verify the deployed revision after deployment. | Chayanit | 3 Dec | Issue 4 |
 

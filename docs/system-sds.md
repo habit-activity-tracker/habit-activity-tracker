@@ -150,23 +150,23 @@ Status codes: 200 read/update, 201 create, 204 logout, 400 validation, 401 missi
 
 The automated matrix tests both cross-participant access and a participant attempting to edit a shared template. No role receives consent-based sharing in Sprint 1.
 
-## Delivery 2 architecture, verification, and coverage gaps
+## Delivery 3 architecture, verification, and retained gaps
 
 Delivery 2 keeps the same web/API/database boundary and adds three owner-scoped capabilities. S2 goal revisions append a `goal_revisions` row and update the current goal version in one transaction; existing daily records are not rewritten. The S2 summary reads records and revisions, calculates capped progress and the current streak with an injected clock, and returns the owner's history. S3 reminder schedules are persisted in the additive `reminder_schedules` migration and calculate `next_occurrence_at` at read time; no notification dispatcher, queue, email, push, webhook, or provider integration exists.
 
 | Area | Evidence and measured status | Gap / follow-up |
 |---|---|---|
-| S2 goal revision and summary | `goals.revision.test.ts`, `sprint2.history.test.ts`; Issue 6 evidence; API suite passed | No known open implementation gap in the recorded scope. |
+| S2 goal revision and summary | `goals.revision.test.ts`, `sprint2.history.test.ts`; released revision UI and Issue 130 E2E evidence | Direct goal PATCH/DELETE is intentionally absent and regression-tested; component coverage remains a separate UI gap. |
 | S2 performance | `docs/evidence/d2-s2/performance-benchmark.md`; 100,002 rows and p95 187.46 ms | Re-run on the final submission candidate if the release commit changes. |
-| S3 reminders | `reminder-schedules.test.ts` 6/6; Issue 9 evidence and PR #120 | Manual UI evidence is captured; no notification delivery is in scope. |
+| S3 reminders | `reminder-schedules.test.ts`, including TEST-S3-09 no-dispatch; D3 access matrix | Schedule representation only; no notification delivery is in scope. |
 | NFR-03 logging/credentials | bcrypt and session tests exist; plaintext-log inspection is not a complete automated check | Keep log inspection in final verification; never record passwords, cookies, or tokens. |
-| NFR-06 coverage | Lab 7 recorded API statement coverage 83.05%, below the 90% target | GAP, not PASS. Re-measure with S3-F10-Q and record scope/exclusions. |
-| NFR-07 operations | Secret injection and deployment evidence exists; restore/RPO/RTO exercise is not complete | Planned under S3-F10-O; do not mark accepted until executed. |
+| NFR-06 coverage | Issue 5 measured 83 API tests passed and 88.24% service/domain statement coverage | GAP, not PASS: target is ≥90%; AC-S3-13 remains INCOMPLETE. |
+| NFR-07 operations | Issue 5 isolated restore reached API readiness in 57m22s; backup age was 13h10m58s | RTO target passes; full RPO evidence remains incomplete because incident interval was not measured. |
 | UI component coverage | AC-34, AC-38, AC-44, and AC-50 lack dedicated component tests | Medium gap; retain build/E2E evidence and add focused component tests in Final Delivery. |
 
 The migration runner is forward-only: `007-reminder-schedules.sql` is additive and existing migrations/data are not modified, but there is no automatic down-migration command. Rollback is therefore an operational recovery concern, documented as a coverage/readiness gap rather than claimed as an implemented feature.
 
-System SDS status: updated for the currently merged Delivery 2 implementation; planned or uncovered checks remain explicitly marked as planned/GAP.
+The contracts appendix is `docs/deliverable-2/contracts/` plus `docs/deliverable-3/contract-amendments.md`; its identifiers and the final feature status are reconciled in `docs/features.md` and `docs/traceability.md`. System SDS status: updated for `d3-staging` merge `0d876ab`; uncovered checks remain explicitly marked as INCOMPLETE/GAP.
 
 ## 7. Credential and session handling
 
