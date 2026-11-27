@@ -13,7 +13,7 @@ These amendments must be merged to `d3-staging` with Kulchaya's review before th
 
 ## Amendment 1 — TEST-S3-09: no-dispatch proof (AC-S3-09)
 
-**Contract:** `docs/deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md`  
+**Contract:** `docs/deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md` at baseline commit `9af6280`. This baseline contract path is no longer present in the current worktree, so the amendment is its retained D3 successor.  
 **Previous version:** v1.0 — TEST-S3-09 described the test but it was not written or enabled.  
 **New version (D3 amendment v1.1):** TEST-S3-09 must be implemented and enabled in Issue 2. It is not optional and may not be skipped.
 
@@ -109,7 +109,7 @@ A 500 on a client error (malformed request body) is a bug that leaks server inte
 
 ## Amendment 3 — S2-F04-R: Revise goal UI (GAP-07 resolution)
 
-**Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md`  
+**Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md` at baseline commit `9af6280`. This baseline contract path is no longer present in the current worktree, so the amendment is its retained D3 successor.  
 **Previous version:** v1.0 — the contract has a “UI behavior” section (owner action, live-validation form and revision history). Only its API and tests (AC-S2-01 to AC-S2-06) were delivered in D2; the UI was not built (GAP-07).  
 **New version (D3 amendment v1.1):** implements that UI behaviour and adds AC-S2-R01 to R06 with an STS. **There is no API change.**
 

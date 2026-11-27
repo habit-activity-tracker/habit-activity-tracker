@@ -4,6 +4,8 @@
 
 Sprint 1 contract, Part A. This contract implements FR-01, FR-02, NFR-02, NFR-03, and AD-16.
 
+**Delivery 3 amendment:** `docs/deliverable-3/contract-amendments.md` Amendment 2 adds AC-02b / TEST-01.9 for malformed JSON. It does not change AC-02a or TEST-01.8.
+
 ## Behavior and workflow
 
 1. A user submits an email and password to the login endpoint.
