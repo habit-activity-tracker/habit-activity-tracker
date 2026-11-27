@@ -29,21 +29,20 @@ Run time: `2026-11-27 17:35 ICT`. No password, cookie, token, or private payload
 
 ## Cloud Run run status
 
-The existing redacted Cloud Run artifact is `access-check-cloudrun.txt`. It records `73/74 PASS` with the expected pre-RC failure: malformed JSON returned `500` on the deployed `v0.2.0` service before the Issue 2 fix was deployed.
-
-### Intended Cloud Run retest target
+The redacted Cloud Run retest is recorded in `access-check-cloudrun-kulchaya.txt`. It was run from Google Cloud Shell against the deployed revision and passed all 74 assertions.
 
 | Item | Value |
 |---|---|
 | GCP project | `cpe334-sec31-ctrl-c-chaya-lab` |
 | Service | `habit-tracker` |
 | Region | `asia-southeast1` |
-| Revision | `habit-tracker-00013-vwx` |
-| Image digest | `sha256:f27136c01ca9d6f7159b01a43aa8bc23df7b4b166bbb159718eee6c78467adc9` |
-| Retest status | Pending authenticated Cloud Shell run |
+| Revision | `habit-tracker-00014-ntq` |
+| Traffic | 100% |
+| Image digest | `sha256:83583b200d2e3999ccb5365cc5cba49520631ab5250e95b7e8f0a22d99ed3648` |
+| Result | `74/74 PASS`, `fail=0` |
 
-I also attempted an independent run against the current public service URL using the local synthetic password without recording it. Login for the three synthetic accounts returned `401`, so the run could not proceed to resource checks. This is a credential/configuration blocker, not a pass result; a Cloud Shell run with the service's configured synthetic demo credential must be attached before approval.
+The retest includes malformed JSON `400`, valid PM/Alice/Bob login `200`, 401/403/404 ownership checks, owner success, reminder/record creation, and AC-43 absent routes. No password, cookie, token, or private payload was recorded.
 
 ## Review decision
 
-Local Docker: PASS (74/74). Cloud Run: evidence exists but requires a successful authenticated rerun on the intended deployed revision. Do not merge until the Cloud Run output is attached with version, date, role labels, and no secrets/cookies.
+Local Docker: PASS (74/74). Cloud Run: PASS (74/74) on revision `habit-tracker-00014-ntq`. Both redacted outputs are attached; no remaining access-matrix blocker was found.
