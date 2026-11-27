@@ -173,9 +173,11 @@ The contracts appendix is `docs/deliverable-2/contracts/` plus `docs/deliverable
 - Requirements and status definitions: [SRS](srs.md)
 - Feature inventory: [features](features.md)
 - Requirement-to-test/evidence mapping: [traceability matrix](traceability.md)
+- Sprint 1 contracts and STS: [F-01 authentication](sprints/sprint-1/F-01-auth.md), [F-02 access control](sprints/sprint-1/F-02-access-control.md), [F-03 template contracts](sprints/sprint-1/F-03-create-template.md), [F-04 goals](sprints/sprint-1/F-04-create-goal.md), [F-05 records](sprints/sprint-1/F-05-record-daily.md), [F-06 progress/history](sprints/sprint-1/F-06-progress-history.md), and [Sprint 1 STS](sprints/sprint-1/sts.md)
 - Sprint 2 contracts: [goal revision](deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md), [streak](deliverable-2/contracts/sprint-2/S2-F06-S-streak.md), [history summary](deliverable-2/contracts/sprint-2/S2-F07-S-history-summary.md), and [performance](deliverable-2/contracts/sprint-2/S2-F10-P-performance.md)
 - Sprint 3 contracts: [reminder schedules](deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md), [operational readiness](deliverable-2/contracts/sprint-3/S3-F10-O-operational-readiness.md), and [verification hardening](deliverable-2/contracts/sprint-3/S3-F10-Q-verification-hardening.md)
 - Delivery 3 amendments: [contract amendments](deliverable-3/contract-amendments.md)
+- Deployment and operational evidence: [Delivery 3 evidence](evidence/d3/)
 
 ## 7. Credential and session handling
 
