@@ -1,5 +1,5 @@
 import type { ErrorRequestHandler, RequestHandler } from 'express';
-import { AppError, internalError, routeNotFound } from '../errors.js';
+import { AppError, ErrorCode, internalError, routeNotFound } from '../errors.js';
 
 export const notFoundHandler: RequestHandler = (_req, _res, next) => {
   next(routeNotFound());
@@ -15,7 +15,7 @@ export const errorHandler: ErrorRequestHandler = (error, _req, response, _next) 
   const appError = error instanceof AppError
     ? error
     : isJsonParseError(error)
-      ? new AppError(400, 'INVALID_JSON', 'The request body is not valid JSON.')
+      ? new AppError(400, ErrorCode.INVALID_JSON, 'The request body is not valid JSON.')
       : internalError();
   response.status(appError.status).json({
     error: {
