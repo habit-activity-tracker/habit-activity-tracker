@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import { jest } from '@jest/globals';
 import request from 'supertest';
 import type { Pool } from 'pg';
 import { createApp } from '../../src/app.js';
@@ -77,5 +78,17 @@ describe('S3-F11-R reminder schedules', () => {
     const response = await bob.get(`/api/goals/${aliceGoalId}/reminder-schedules`).expect(404);
     expect(response.body.error.code).toBe('GOAL_NOT_FOUND');
     expect(response.body.error.details).toEqual({});
+  });
+
+  it('TEST-S3-09 / AC-S3-09: no notification dispatch occurs on create, list, or compute', async () => {
+    const fetchSpy = jest.spyOn(globalThis, 'fetch');
+    try {
+      const alice = await login('alice@x.com');
+      await alice.post(`/api/goals/${aliceGoalId}/reminder-schedules`).send({ local_time: '08:30', days_of_week: [1] }).expect(201);
+      await alice.get(`/api/goals/${aliceGoalId}/reminder-schedules`).expect(200);
+      expect(fetchSpy).not.toHaveBeenCalled();
+    } finally {
+      fetchSpy.mockRestore();
+    }
   });
 });

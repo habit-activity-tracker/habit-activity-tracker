@@ -85,4 +85,23 @@ describe('F-04 create personal goal', () => {
   it('TEST-04.8 rejects unauthenticated goal requests', async () => {
     await request(createApp(pool)).post('/api/goals').send({ template_id: templateId, target: 10, start_date: '2026-11-04', end_date: '2026-11-04' }).expect(401);
   });
+
+  it('TEST-AC-43: goal PATCH and DELETE routes are explicitly absent', async () => {
+    const agent = await login('alice@example.com');
+    const patch = await agent.patch(`/api/goals/${bobGoalId}`).send({ target: 99 });
+    const remove = await agent.delete(`/api/goals/${bobGoalId}`);
+
+    expect(patch.status).toBe(404);
+    expect(patch.body.error).toEqual({
+      code: 'ROUTE_NOT_FOUND',
+      message: expect.any(String),
+      details: {},
+    });
+    expect(remove.status).toBe(404);
+    expect(remove.body.error).toEqual({
+      code: 'ROUTE_NOT_FOUND',
+      message: expect.any(String),
+      details: {},
+    });
+  });
 });
