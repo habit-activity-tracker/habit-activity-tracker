@@ -4,6 +4,8 @@
 
 Sprint 1 contract, Part A. This contract implements FR-01, FR-02, NFR-02, NFR-03, and AD-16.
 
+**Delivery 3 amendment:** `docs/deliverable-3/contract-amendments.md` Amendment 2 adds AC-02b / TEST-01.9 for malformed JSON. It does not change AC-02a or TEST-01.8.
+
 ## Behavior and workflow
 
 1. A user submits an email and password to the login endpoint.
@@ -21,7 +23,7 @@ Login is available to seeded Participants and Program Managers. `/api/me` and lo
 
 ## Business rules, validation, and failure cases
 
-Emails are normalized before lookup; blank or malformed credentials are rejected with the same generic `INVALID_CREDENTIALS` response. Password comparison is performed with bcrypt. Session middleware rejects missing, revoked, and expired sessions before role/resource validation. Login must not reveal whether an account exists.
+Emails are normalized before lookup; blank or malformed login requests return `400 INVALID_LOGIN_REQUEST` as defined by AC-02a, while validly shaped wrong/unknown credentials return generic `401 INVALID_CREDENTIALS`. Password comparison is performed with bcrypt. Session middleware rejects missing, revoked, and expired sessions before role/resource validation. Login must not reveal whether an account exists.
 
 ## UI behavior
 
