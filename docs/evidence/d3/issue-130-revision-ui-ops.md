@@ -1,6 +1,6 @@
 # Issue 130 — Revision UI and operations evidence
 
-- **Version:** `1c86df4` (`feature/d3-revision-ui-ops`)
+- **Version:** `782c517` (`feature/d3-revision-ui-ops`)
 - **Role:** Chayanit (lead)
 - **Date:** 27 November 2026 (Asia/Bangkok)
 - **Status:** local implementation checks passed; deployment evidence is pending and is not claimed as PASS.
@@ -11,7 +11,7 @@
 |---|---|
 | `npm run build` | PASS — API TypeScript build and web production build completed. |
 | `npm run test:unit` | PASS — 6 suites, 19 tests. |
-| `npm run test:api` | PASS — 14 suites, 83 tests, independently rerun by Kulchaya. |
+| `npm run test:api` | PASS — 14 suites, 83 tests, 0 failures, 136.783 s. Run by Chayanit on local Docker PostgreSQL after preparing the isolated `habit_tracker_test` database. |
 | `npm run test:e2e` | PASS — 4 tests. This includes the revision workflow browser test. Its API responses are stubbed deliberately; backend persistence, ownership, validation and record-integrity remain covered by `api/tests/api/goals.revision.test.ts`. |
 
 ## Regression found and fixed before approval
