@@ -33,6 +33,16 @@ describe('S2-F04-R: validateGoalRevision', () => {
     }
   });
 
+  it('rejects targets outside the goal_revisions numeric(10, 2) range', () => {
+    const maximum = validateGoalRevision({ target: 99_999_999.99, end_date: '2026-12-15' }, startDate);
+    const tooLarge = validateGoalRevision({ target: 100_000_000, end_date: '2026-12-15' }, startDate);
+    const roundedToZero = validateGoalRevision({ target: 0.001, end_date: '2026-12-15' }, startDate);
+
+    expect(maximum.valid).toBe(true);
+    expect(tooLarge.valid).toBe(false);
+    expect(roundedToZero.valid).toBe(false);
+  });
+
   it('TEST-S2-03 / AC-S2-03: rejects end_date earlier than start_date', () => {
     const result = validateGoalRevision({ target: 200, end_date: '2026-10-31' }, startDate);
     expect(result.valid).toBe(false);
