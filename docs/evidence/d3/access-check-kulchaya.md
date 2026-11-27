@@ -31,6 +31,17 @@ Run time: `2026-11-27 17:35 ICT`. No password, cookie, token, or private payload
 
 The existing redacted Cloud Run artifact is `access-check-cloudrun.txt`. It records `73/74 PASS` with the expected pre-RC failure: malformed JSON returned `500` on the deployed `v0.2.0` service before the Issue 2 fix was deployed.
 
+### Intended Cloud Run retest target
+
+| Item | Value |
+|---|---|
+| GCP project | `cpe334-sec31-ctrl-c-chaya-lab` |
+| Service | `habit-tracker` |
+| Region | `asia-southeast1` |
+| Revision | `habit-tracker-00013-vwx` |
+| Image digest | `sha256:f27136c01ca9d6f7159b01a43aa8bc23df7b4b166bbb159718eee6c78467adc9` |
+| Retest status | Pending authenticated Cloud Shell run |
+
 I also attempted an independent run against the current public service URL using the local synthetic password without recording it. Login for the three synthetic accounts returned `401`, so the run could not proceed to resource checks. This is a credential/configuration blocker, not a pass result; a Cloud Shell run with the service's configured synthetic demo credential must be attached before approval.
 
 ## Review decision
