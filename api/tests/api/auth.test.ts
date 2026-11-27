@@ -52,6 +52,24 @@ describe('F-01 authentication and current user', () => {
     expect(response.body.error.code).toBe('INVALID_LOGIN_REQUEST');
   });
 
+  it('TEST-01.9 / AC-02b rejects malformed JSON without creating a session', async () => {
+    const response = await request(createApp(pool))
+      .post('/api/auth/login')
+      .set('Content-Type', 'application/json')
+      .send('{"email":');
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      error: {
+        code: 'INVALID_JSON',
+        message: expect.any(String),
+        details: {},
+      },
+    });
+    expect(response.body.error.message).not.toMatch(/stack|syntax|unexpected token/i);
+    expect(response.headers['set-cookie']).toBeUndefined();
+  });
+
   it('TEST-01.3 / AC-01.3 returns the current user and rejects the session after logout', async () => {
     const agent = request.agent(createApp(pool));
     await agent.post('/api/auth/login').send({ email: 'alice@example.com', password }).expect(200);
