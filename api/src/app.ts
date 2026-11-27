@@ -19,7 +19,7 @@ export const createApp = (pool: Pool = getPool(), clock: Clock = systemClock): E
   app.use(cookieParser());
 
   app.get('/api/health', (_request, response) => {
-    response.status(200).json({ status: 'ok' });
+    response.status(200).json({ status: 'ok', commit: process.env.GIT_COMMIT_SHA ?? null });
   });
 
   app.get('/api/ready', async (_request, response) => {

@@ -58,6 +58,14 @@ jobs:
           test -n "$WIF_PROVIDER" && test -n "$WIF_SERVICE_ACCOUNT"
           [[ "$IMAGE_TAG" =~ ^[0-9a-f]{40}$ ]] || { echo 'Image tag must be a full 40-character commit SHA.'; exit 1; }
 
+      - name: Validate authenticated smoke credentials
+        env:
+          SMOKE_EMAIL: ${{ vars.SMOKE_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+        run: |
+          test -n "$SMOKE_EMAIL" || { echo 'SMOKE_EMAIL is required.'; exit 1; }
+          test -n "$SMOKE_PASSWORD" || { echo 'SMOKE_PASSWORD is required.'; exit 1; }
+
       - name: Authenticate to Google Cloud without a key
         uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3
         with:
@@ -87,6 +95,7 @@ jobs:
         env:
           SMOKE_EMAIL: ${{ vars.SMOKE_EMAIL }}
           SMOKE_PASSWORD: ${{ secrets.SMOKE_PASSWORD }}
+          EXPECTED_COMMIT_SHA: ${{ env.IMAGE_TAG }}
         run: python3 deploy/smoke_test.py "$SERVICE_URL"
 
       - name: Record deployment
@@ -97,5 +106,5 @@ jobs:
             echo "- Digest: \`$DEPLOYED_IMAGE\`"
             echo "- Rollback: $ROLLBACK"
             echo "- URL: $SERVICE_URL"
-            echo '- Smoke test: passed (health, readiness, UI, and unauthenticated API check).'
+            echo '- Smoke test: passed (commit, health, readiness, UI, unauthenticated API, authenticated login, and logout).'
           } >> "$GITHUB_STEP_SUMMARY"

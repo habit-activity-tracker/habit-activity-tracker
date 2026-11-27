@@ -3,20 +3,23 @@
 Usage:  python3 deploy/smoke_test.py SERVICE_URL
 
 Checks (in order, each retried up to 5 times, 3 s apart, to tolerate cold starts):
-  1. GET /api/health      -> {"status": "ok"}
+  1. GET /api/health      -> {"status": "ok", "commit": EXPECTED_COMMIT_SHA}
   2. GET /api/ready       -> {"status": "ready"}  (the app can reach the database)
   3. GET /                -> the built React app (contains its #root mount point)
   4. GET /api/templates   -> 401 SESSION_REQUIRED without a session
                              (the API, the session guard and the error envelope work)
-  5. OPTIONAL login test  -> login, GET /api/me, logout. Runs only if BOTH
-     SMOKE_EMAIL and SMOKE_PASSWORD are set. Uses a session cookie (not a token)
-     and always logs out, even if a check fails.
+  5. Authenticated check   -> login, GET /api/me, logout using SMOKE_EMAIL and
+     SMOKE_PASSWORD. Both values are required and are never printed.
+
+Required environment: EXPECTED_COMMIT_SHA (full 40-character SHA),
+SMOKE_EMAIL, and SMOKE_PASSWORD.
 
 Only the Python standard library is used. Exits non-zero if any check fails.
 """
 import http.cookiejar
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -51,9 +54,9 @@ def error_code(body):
         return None
 
 
-def public_checks():
+def public_checks(expected_commit):
     return (
-        ('/api/health', lambda s, b: s == 200 and json.loads(b).get('status') == 'ok'),
+        ('/api/health', lambda s, b: s == 200 and json.loads(b).get('status') == 'ok' and json.loads(b).get('commit') == expected_commit),
         ('/api/ready', lambda s, b: s == 200 and json.loads(b).get('status') == 'ready'),
         # The Vite build has no <html> tag; the React mount point proves the client is served.
         ('/', lambda s, b: s == 200 and b'id="root"' in b),
@@ -62,26 +65,26 @@ def public_checks():
 
 
 def check(base):
+    email, password = os.getenv('SMOKE_EMAIL'), os.getenv('SMOKE_PASSWORD')
+    expected_commit = os.getenv('EXPECTED_COMMIT_SHA')
+    if not email or not password:
+        raise RuntimeError('Set both SMOKE_EMAIL and SMOKE_PASSWORD.')
+    if not expected_commit or not re.fullmatch(r'[0-9a-f]{40}', expected_commit):
+        raise RuntimeError('Set EXPECTED_COMMIT_SHA to the deployed 40-character commit SHA.')
+
     client = make_client()
-    for path, predicate in public_checks():
+    for path, predicate in public_checks(expected_commit):
         for attempt in range(5):
             try:
                 status, body = request(client, base, path)
                 if not predicate(status, body):
                     raise ValueError('Unexpected response')
                 break
-            except (urllib.error.URLError, TimeoutError, ValueError):
+            except (OSError, ValueError):
                 if attempt == 4:
                     raise RuntimeError('Smoke check failed: ' + path) from None
                 time.sleep(3)
         print('PASS ' + path)
-
-    email, password = os.getenv('SMOKE_EMAIL'), os.getenv('SMOKE_PASSWORD')
-    if bool(email) != bool(password):
-        raise RuntimeError('Set both SMOKE_EMAIL and SMOKE_PASSWORD, or neither.')
-    if not email:
-        print('SKIP login: optional smoke credentials not configured')
-        return
 
     logged_in = False
     try:
@@ -90,14 +93,17 @@ def check(base):
             raise RuntimeError('Login smoke check failed')
         logged_in = True
         status, body = request(client, base, '/api/me')
-        if status != 200 or json.loads(body).get('user', json.loads(body)).get('email') is None:
+        user = json.loads(body).get('user')
+        if status != 200 or not isinstance(user, dict) or user.get('email') != email.strip().lower():
             raise RuntimeError('Login smoke check failed')
         print('PASS login and authenticated /api/me')
-    except (urllib.error.URLError, TimeoutError, ValueError):
+    except (OSError, ValueError):
         raise RuntimeError('Login smoke check failed') from None
     finally:
         if logged_in:
-            request(client, base, '/api/auth/logout', data={}, method='POST')
+            status, _ = request(client, base, '/api/auth/logout', data={}, method='POST')
+            if status != 204:
+                raise RuntimeError('Logout smoke check failed')
             print('PASS logout')
 
 

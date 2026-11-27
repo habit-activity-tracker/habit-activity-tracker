@@ -111,7 +111,7 @@ A 500 on a client error (malformed request body) is a bug that leaks server inte
 
 **Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md` restored unchanged from baseline commit `9af6280`.  
 **Previous version:** v1.0 — the contract has a “UI behavior” section (owner action, live-validation form and revision history). Only its API and tests (AC-S2-01 to AC-S2-06) were delivered in D2; the UI was not built (GAP-07).  
-**New version (D3 amendment v1.1):** implements that UI behaviour and adds AC-S2-R01 to R06 with an STS. **There is no API change.**
+**New version (D3 amendment v1.1):** implements that UI behaviour and adds AC-S2-R01 to R06 with an STS. The revision API is unchanged; `/api/health` additively reports the deployed commit SHA for OP-02.
 
 ### GAP-07 decision
 
@@ -151,6 +151,7 @@ Existing API coverage is reused: TEST-S2-05a (manager 403), TEST-S2-05b (other p
 ### Scope boundary
 
 - The UI calls the real backend only; no client-side state management workarounds.
+- The Playwright UI spec uses deterministic API responses to isolate the browser workflow; real endpoint persistence, ownership, validation, and record integrity remain covered by `api/tests/api/goals.revision.test.ts`.
 - The form sends only `target` and `end_date`; the server sets `effective_date`, which is display-only.
 - Existing `daily_records` rows are never modified by a revision.
 - Past revisions cannot be edited or deleted.
@@ -161,6 +162,17 @@ Existing API coverage is reused: TEST-S2-05a (manager 403), TEST-S2-05b (other p
 - Every AC-S2-R01 to R06 has an executed result.
 - RED/GREEN commit hashes are recorded for R01–R04 and R06.
 - Screenshots show role, expected/actual and version; the existing suite stays green.
+
+### Issue 4 operational acceptance
+
+| Gap | Implemented behavior | Evidence still required |
+|---|---|---|
+| OP-01 | The deployment workflow requires `SMOKE_EMAIL` and `SMOKE_PASSWORD`; the smoke check fails instead of skipping and verifies login, `/api/me`, and logout without printing credentials. | Run the deployment smoke check against the intended Cloud Run revision and retain redacted output. |
+| OP-02 | The release script sets `GIT_COMMIT_SHA` from the exact image SHA; `/api/health` and the app header report it, and deployment smoke compares it with the expected SHA. | Verify the deployed revision and header after deployment. |
+| GAP-03 / AC-06 | Application authentication code does not log submitted passwords; source inspection found no credential logging. | Inspect Cloud Run logs for the deployed revision and record the result. |
+| GAP-04 / AC-07 | The session cookie uses `Secure`, `HttpOnly`, `SameSite=Lax`, and the configured session TTL in production; an API test checks these attributes. | Check the deployed `Set-Cookie` header and record the actual expiry. |
+
+The local implementation and automated checks do not substitute for the listed live Cloud Run evidence.
 
 ### Implementation instruction (for Issue 4 lead Chayanit)
 
@@ -176,4 +188,4 @@ Existing API coverage is reused: TEST-S2-05a (manager 403), TEST-S2-05b (other p
 |---|---|---|---|---|
 | 1 — TEST-S3-09 no-dispatch | S3-F11-R v1.0 → v1.1 | AC-S3-09; TEST-S3-09 | Kulchaya (Issue 2) | Required before Issue 2 first red commit |
 | 2 — PD-03a malformed-JSON | F-01 auth + shared error table | AC-02b (new); TEST-01.9; `INVALID_JSON` | Kulchaya (Issue 2) | Required before Issue 2 first red commit |
-| 3 — S2-F04-R Revise UI | S2-F04-R v1.0 → v1.1 | AC-S2-R01 to R06; TEST-S2-R01 to R06 | Chayanit (Issue 4) | Required before Issue 4 first red commit |
+| 3 — S2-F04-R Revise UI | S2-F04-R v1.0 → v1.1 | AC-S2-R01 to R06; TEST-S2-R01 to R06 | Chayanit (Issue 4) | Implemented on `feature/d3-revision-ui-ops`; review and live evidence pending |

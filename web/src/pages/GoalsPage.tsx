@@ -13,6 +13,10 @@ export const GoalsPage = ({ refreshKey = 0, children }: { refreshKey?: number; c
     fetch('/api/goals', { credentials: 'include' }).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error?.message || 'Unable to load goals.'); setGoals(body.goals); const remembered = localStorage.getItem('selectedGoalId'); setSelectedGoal(body.goals.find((goal: Goal) => goal.id === remembered) ?? null); }).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load goals.')).finally(() => setLoading(false));
   }, [refreshKey]);
   const select = (goal: Goal) => { localStorage.setItem('selectedGoalId', goal.id); setSelectedGoal(goal); };
+  const updateGoal = (updatedGoal: Goal) => {
+    setGoals((current) => current.map((goal) => goal.id === updatedGoal.id ? updatedGoal : goal));
+    setSelectedGoal((current) => current?.id === updatedGoal.id ? updatedGoal : current);
+  };
   const nameOf = (goal: Goal) => templates.find((item) => item.id === goal.template_id)?.name ?? 'Goal';
   return <div className="grid-sidebar">
     <div className="stack">
@@ -26,6 +30,6 @@ export const GoalsPage = ({ refreshKey = 0, children }: { refreshKey?: number; c
       </section>
       {children}
     </div>
-    <div>{selectedGoal ? <GoalPage goal={selectedGoal} /> : <p className="card empty">Select a goal to record activity and see your progress.</p>}</div>
+    <div>{selectedGoal ? <GoalPage goal={selectedGoal} onGoalUpdated={updateGoal} /> : <p className="card empty">Select a goal to record activity and see your progress.</p>}</div>
   </div>;
 };
