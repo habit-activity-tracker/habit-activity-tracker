@@ -26,7 +26,8 @@ body() { curl -sS -b "$1" "$BASE$2"; }
 report 'E-00a health' 200 "$(code "$BASE/api/health")"; report 'E-00b ready' 200 "$(code "$BASE/api/ready")"
 malformed_payload='{"email":'
 report 'E-01 malformed JSON login' 400 "$(code -X POST -H 'Content-Type: application/json' -d "$malformed_payload" "$BASE/api/auth/login")"
-report 'E-01 invalid credentials' 401 "$(code -X POST -H 'Content-Type: application/json' -d "{\"email\":\"$ALICE_EMAIL\",\"password\":\"wrong-password\"}" "$BASE/api/auth/login")"
+invalid_login_payload="{\"email\":\"$ALICE_EMAIL\",\"password\":\"wrong-password\"}"
+report 'E-01 invalid credentials' 401 "$(code -X POST -H 'Content-Type: application/json' -d "$invalid_login_payload" "$BASE/api/auth/login")"
 report 'E-01 PM login' 200 "$(login "$PM_EMAIL" "$JARS/pm")"; report 'E-01 Alice login' 200 "$(login "$ALICE_EMAIL" "$JARS/alice")"; report 'E-01 Bob login' 200 "$(login "$BOB_EMAIL" "$JARS/bob")"
 for p in /api/auth/me /api/me; do report "no-session $p" 401 "$(code "$BASE$p")"; report "Alice $p" 200 "$(json_code "$JARS/alice" GET "$p")"; done
 report 'E-03 no-session logout' 401 "$(code -X POST "$BASE/api/auth/logout")"
