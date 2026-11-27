@@ -2,6 +2,8 @@
 
 **Baseline:** `d3-staging` merge `0d876ab` (27 November 2026). Results record executed evidence only. `INCOMPLETE` means the target, AC, or evidence scope is not fully met; it is never a PASS claim. Detailed contracts remain in `docs/deliverable-2/contracts/` and `docs/deliverable-3/contract-amendments.md`.
 
+**Document links:** [SRS](srs.md) defines the FR/BR/NFR requirements; [System SDS](system-sds.md) defines the architecture, data model, access design, and error contract; the [Sprint 2/Sprint 3 contracts](deliverable-2/contracts/) define AC and STS; and the [Delivery 3 contract amendments](deliverable-3/contract-amendments.md) record approved changes and their test obligations.
+
 | ID | Feature | Sprint | AC / measurable target | Planned test | Actual test or evidence | Result | Commit |
 |---|---|---|---|---|---|---|---|
 | FR-01 | F-01 | S1 | AC-01–02b: login and malformed JSON | auth integration | `api/tests/api/auth.test.ts`; TEST-01.9 | PASS | `5ba5905` |

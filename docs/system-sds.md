@@ -168,6 +168,15 @@ The migration runner is forward-only: `007-reminder-schedules.sql` is additive a
 
 The contracts appendix is `docs/deliverable-2/contracts/` plus `docs/deliverable-3/contract-amendments.md`; its identifiers and the final feature status are reconciled in `docs/features.md` and `docs/traceability.md`. System SDS status: updated for `d3-staging` merge `0d876ab`; uncovered checks remain explicitly marked as INCOMPLETE/GAP.
 
+### Cross-document references
+
+- Requirements and status definitions: [SRS](srs.md)
+- Feature inventory: [features](features.md)
+- Requirement-to-test/evidence mapping: [traceability matrix](traceability.md)
+- Sprint 2 contracts: [goal revision](deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md), [streak](deliverable-2/contracts/sprint-2/S2-F06-S-streak.md), [history summary](deliverable-2/contracts/sprint-2/S2-F07-S-history-summary.md), and [performance](deliverable-2/contracts/sprint-2/S2-F10-P-performance.md)
+- Sprint 3 contracts: [reminder schedules](deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md), [operational readiness](deliverable-2/contracts/sprint-3/S3-F10-O-operational-readiness.md), and [verification hardening](deliverable-2/contracts/sprint-3/S3-F10-Q-verification-hardening.md)
+- Delivery 3 amendments: [contract amendments](deliverable-3/contract-amendments.md)
+
 ## 7. Credential and session handling
 
 Login normalizes the email, loads the user, compares the submitted password with bcrypt, and returns a generic failure for invalid credentials. Passwords are never logged or returned. On success the server creates a random opaque session ID, stores its hash/record with an expiry, and sets an `HttpOnly`, `SameSite=Lax` cookie; `Secure` is enabled outside development. Middleware retrieves the current user from the non-revoked, non-expired session on every protected request. Logout revokes the session and clears the cookie. Session expiry is configurable, with a planned default of 24 hours. CSRF protection is not implemented in Sprint 1.
