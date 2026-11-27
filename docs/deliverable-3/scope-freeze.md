@@ -20,7 +20,7 @@
 
 ## Baseline and source of truth
 
-The Delivery 3 scope freeze starts from `main` commit `9af6280` (tag `v0.2.0`), the Delivery 2 release merge commit. Evidence references to `c5d3122` are a later 24 November 2026 Part A E2E-fixture rerun commit, not a replacement baseline.
+The Delivery 3 scope freeze starts from `main` commit `9af6280` (tag `v0.2.0`), the Delivery 2 release merge commit. D2 evidence/counts are cited at `9af6280`; `c5d3122` is a separate 24 November 2026 Part A E2E-fixture commit and is not an ancestor of the D2 release.
 
 The three-sprint plan in `docs/sprints/plan.md` and SRS decisions AD-01 through AD-18 (including approved change CR-01) remain in force. This document adds Delivery 3 delivery identifiers and statuses without renumbering or deleting any baseline item.
 
@@ -90,10 +90,11 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | F-05 | Daily records | **CHANGED** | CR-01 date/time behaviour applies. |
 | F-06 | Progress calculation | **DONE** | Progress tests recorded. |
 | F-07 | Goal/history UI | **PARTIAL** | Component evidence GAP-02; revision UI GAP-07. |
-| F-08 | Deployment/configuration | **PARTIAL** | OP-01 and OP-02 remain. |
-| F-09 | Integration/test automation | **PARTIAL** | Final regression and traceability evidence pending. |
-| F-10 | Performance/operational readiness | **PARTIAL** | Coverage GAP-05 and restore GAP-06 remain. |
+| F-08 | Shared validation and API error contract | **PARTIAL** | PD-03a / AC-02b is an open error-contract gap. |
+| F-09 | Study dashboard UI | **PARTIAL** | Component evidence remains incomplete (GAP-02). |
+| F-10 | Testable deployment and security baseline | **PARTIAL** | Coverage (GAP-05), restore (GAP-06), and deployment/security checks remain. |
 | F-11 | Reminder schedules | **PARTIAL** | No-dispatch test GAP-08 remains. |
+| Delivery | Docker, CI and GCP delivery baseline | **PARTIAL** | Delivery pipeline exists; OP-01/OP-02 and final deployment evidence remain. |
 
 | AC/debt ID | Status | Retained action |
 |---|---|---|
@@ -102,16 +103,16 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | AC-27 | **PARTIAL** | Obtain UI safe-denial/component evidence or mark INCOMPLETE (GAP-02). |
 | SEC-01 | **OPEN** | Record security impact and remediation/defer decision in Issue 7 debt register. |
 | OBS-01 | **OPEN** | Record observability impact and next action in Issue 7 debt register. |
-| S3-Q01 | **OPEN** | Coverage below target; resolve or disclose after final measurement (GAP-05). |
-| S3-Q02 | **OPEN** | Complete full permission/access matrix in Issue 3. |
+| S3-Q01 | **OPEN** | CSRF/rate-limiting debt (SEC-01); record impact and remediation/defer decision in Issue 7. |
+| S3-Q02 | **OPEN** | Error-logging debt (OBS-01); record observability impact and next action in Issue 7. |
 
 ### Sprint 2 delivery items
 
 | Delivery ID | Description | Status | Evidence |
 |---|---|---|---|
 | S2-F04-R | Versioned goal revision (API + backend) | **PARTIAL** | API and tests done; Revise UI not built — GAP-07 decision: **build UI** (see §4) |
-| S2-F06-S | Deterministic streak calculation | **DONE** | `sprint2.history.test.ts`; `6da30d5` |
-| S2-F07-S | History summary (progress, streak, records, revisions) | **DONE** | `sprint2.history.test.ts`; `6da30d5` |
+| S2-F06-S | Deterministic streak calculation | **PARTIAL** | D2 recorded partially tested; retain status pending final re-run. |
+| S2-F07-S | History summary (progress, streak, records, revisions) | **PARTIAL** | D2 recorded partially tested; retain status pending final re-run. |
 | S2-F10-P | Performance benchmark, 100k seed | **DONE** | `docs/evidence/d2-s2/performance-benchmark.md`; `5b6353e` |
 
 ### Sprint 3 delivery items

@@ -13,7 +13,7 @@ These amendments must be merged to `d3-staging` with Kulchaya's review before th
 
 ## Amendment 1 — TEST-S3-09: no-dispatch proof (AC-S3-09)
 
-**Contract:** `docs/deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md` at baseline commit `9af6280`. This baseline contract path is no longer present in the current worktree, so the amendment is its retained D3 successor.  
+**Contract:** `docs/deliverable-2/contracts/sprint-3/S3-F11-R-reminder-schedules.md` restored unchanged from baseline commit `9af6280`.  
 **Previous version:** v1.0 — TEST-S3-09 described the test but it was not written or enabled.  
 **New version (D3 amendment v1.1):** TEST-S3-09 must be implemented and enabled in Issue 2. It is not optional and may not be skipped.
 
@@ -93,7 +93,7 @@ HTTP 400
 
 ### Scope note: protected routes
 
-The fix is an app-level error handler, so other JSON routes also return `400` instead of `500` for malformed JSON. Protected routes must keep the AD-14 check order (401 → 403 → 404 → 400 → 409). Issue 2 must check whether the body parser runs before the session check; if so, either run the session check first or record the 400-before-401 ordering exception here. Only the login route is covered by TEST-01.9. The `access-control.sprint2` suite must stay green.
+The fix is an app-level error handler, so other JSON routes also return `400` instead of `500` for malformed JSON. **AD-14 describes 401 → 403 → 404 → 400 → 409; current code does 401 → 403 → 400 invalid ID → 404 owned/not-found. Decision: retain current code ordering for Issue 3 evidence and record this D3 amendment as the ordering exception.** `express.json()` runs before route middleware, so Issue 2 must record the malformed-JSON-before-session behaviour. Only the login route is covered by TEST-01.9. The `access-control.sprint2` suite must stay green.
 
 ### Reason
 
@@ -109,7 +109,7 @@ A 500 on a client error (malformed request body) is a bug that leaks server inte
 
 ## Amendment 3 — S2-F04-R: Revise goal UI (GAP-07 resolution)
 
-**Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md` at baseline commit `9af6280`. This baseline contract path is no longer present in the current worktree, so the amendment is its retained D3 successor.  
+**Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md` restored unchanged from baseline commit `9af6280`.  
 **Previous version:** v1.0 — the contract has a “UI behavior” section (owner action, live-validation form and revision history). Only its API and tests (AC-S2-01 to AC-S2-06) were delivered in D2; the UI was not built (GAP-07).  
 **New version (D3 amendment v1.1):** implements that UI behaviour and adds AC-S2-R01 to R06 with an STS. **There is no API change.**
 

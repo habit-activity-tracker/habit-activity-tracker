@@ -60,7 +60,7 @@
 | E-10 | GET | `/api/goals/:id` | Session | participant only | 404 if other participant's goal | AC-43, AC-49 |
 | E-11 | GET | `/api/goals/:id/summary` | Session | participant only | 404 if other participant's goal | AC-S2-11, AC-S2-12, AC-S2-14 |
 | E-12 | POST | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-01, AC-S2-02, AC-S2-05 |
-| E-13 | GET | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-03, AC-S2-04, AC-S2-05 |
+| E-13 | GET | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-05, AC-S2-11, AC-S2-13 |
 
 > **Added after Sprint 1:** E-11 (summary), E-12 (create revision), E-13 (list revisions)
 
@@ -108,7 +108,7 @@ The `requireOwnedGoal` middleware in `api/src/middleware/goalOwnership.ts` enfor
 3. **400 INVALID_GOAL_ID** — after authentication and role checks, a malformed `:id` is rejected by `requireOwnedGoal`
 4. **404 GOAL_NOT_FOUND** — a valid UUID goal does not exist OR belongs to a different participant
 
-`express.json()` runs before all route middleware. Until Amendment 2 is implemented, malformed JSON can therefore reach the generic handler before a session check; Issue 2 must record the corrected parse-error behaviour. No private goal/record/schedule data appears in a 403 or 404 body.
+**AD-14 describes 401 → 403 → 404 → 400 → 409; the current code does 401 → 403 → 400 invalid ID → 404 owned/not-found. Decision: Issue 3 access matrix follows the current code, and the D3 amendment records the AD-14 ordering exception.** `express.json()` runs before route middleware. Until Amendment 2 is implemented, malformed JSON can therefore reach the generic handler before a session check. No private goal/record/schedule data appears in a 403 or 404 body.
 
 ---
 

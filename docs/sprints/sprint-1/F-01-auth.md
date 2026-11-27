@@ -23,7 +23,7 @@ Login is available to seeded Participants and Program Managers. `/api/me` and lo
 
 ## Business rules, validation, and failure cases
 
-Emails are normalized before lookup; blank or malformed credentials are rejected with the same generic `INVALID_CREDENTIALS` response. Password comparison is performed with bcrypt. Session middleware rejects missing, revoked, and expired sessions before role/resource validation. Login must not reveal whether an account exists.
+Emails are normalized before lookup; blank or malformed login requests return `400 INVALID_LOGIN_REQUEST` as defined by AC-02a, while validly shaped wrong/unknown credentials return generic `401 INVALID_CREDENTIALS`. Password comparison is performed with bcrypt. Session middleware rejects missing, revoked, and expired sessions before role/resource validation. Login must not reveal whether an account exists.
 
 ## UI behavior
 
