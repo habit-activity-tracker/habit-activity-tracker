@@ -1,6 +1,6 @@
 # Delivery 3 — Full Endpoint List
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 27 November 2026 (Asia/Bangkok)  
 **Author:** Chayanit Kuntanarumitkul (67070503408)  
 **Reviewer:** Kulchaya Paipinij — must check this list against the live router source files  
@@ -35,7 +35,7 @@
 
 | # | Method | Full path | Auth | Role | Ownership | AC reference |
 |---|---|---|---|---|---|---|
-| E-01 | POST | `/api/auth/login` | None | Any | None | AC-01, AC-02, AC-02a; PD-03a |
+| E-01 | POST | `/api/auth/login` | None | Any | None | AC-01, AC-02, AC-02a, AC-02b; PD-03a |
 | E-02 | GET | `/api/auth/me` | Session | participant, program_manager | None — returns caller only | AC-03, AC-04 |
 | E-03 | POST | `/api/auth/logout` | Session | participant, program_manager | None — invalidates caller session | AC-05 |
 | E-04 | GET | `/api/me` | Session | participant, program_manager | None — alias for `/api/auth/me` | AC-03, AC-04 |
@@ -58,9 +58,9 @@
 | E-08 | POST | `/api/goals` | Session | participant only | Creates record owned by caller | AC-39, AC-40, AC-42 |
 | E-09 | GET | `/api/goals` | Session | participant only | Returns only caller's goals | AC-44, AC-48 |
 | E-10 | GET | `/api/goals/:id` | Session | participant only | 404 if other participant's goal | AC-43, AC-49 |
-| E-11 | GET | `/api/goals/:id/summary` | Session | participant only | 404 if other participant's goal | AC-S2-11, AC-S2-12 |
-| E-12 | POST | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-01, AC-S2-02 |
-| E-13 | GET | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-03, AC-S2-04 |
+| E-11 | GET | `/api/goals/:id/summary` | Session | participant only | 404 if other participant's goal | AC-S2-11, AC-S2-12, AC-S2-14 |
+| E-12 | POST | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-01, AC-S2-02, AC-S2-05 |
+| E-13 | GET | `/api/goals/:id/revisions` | Session | participant only | 404 if other participant's goal | AC-S2-03, AC-S2-04, AC-S2-05 |
 
 > **Added after Sprint 1:** E-11 (summary), E-12 (create revision), E-13 (list revisions)
 
@@ -90,10 +90,10 @@
 
 ## Endpoints NOT present (do not appear in access matrix)
 
-The following HTTP methods do not exist in the codebase and must return `404 Not Found` from the framework (not an application-level auth check):
+The following HTTP methods do not exist in the codebase and must return the JSON error envelope `404 ROUTE_NOT_FOUND` (not an application-level auth check):
 
-- `PATCH /api/goals/:id` → returns `404` (confirmed by AC-43 and `goals.test.ts`)
-- `DELETE /api/goals/:id` → returns `404`
+- `PATCH /api/goals/:id` → expected `404 ROUTE_NOT_FOUND`; automated assertion to be added in Issue 2 (GAP-01 / AC-43)
+- `DELETE /api/goals/:id` → expected `404 ROUTE_NOT_FOUND`; automated assertion to be added in Issue 2 (GAP-01 / AC-43)
 - `PATCH /api/goals/:id/reminder-schedules/:sid` → not implemented (scope boundary: Sprint 3 is create/list only)
 - `DELETE /api/goals/:id/reminder-schedules/:sid` → not implemented
 
@@ -105,9 +105,10 @@ The `requireOwnedGoal` middleware in `api/src/middleware/goalOwnership.ts` enfor
 
 1. **401 SESSION_REQUIRED** — no session cookie / invalid session
 2. **403 ROLE_FORBIDDEN** — authenticated but not a participant (e.g., program_manager)
-3. **404 GOAL_NOT_FOUND** — goal does not exist OR belongs to a different participant
+3. **400 INVALID_GOAL_ID** — after authentication and role checks, a malformed `:id` is rejected by `requireOwnedGoal`
+4. **404 GOAL_NOT_FOUND** — a valid UUID goal does not exist OR belongs to a different participant
 
-No private goal/record/schedule data appears in a 403 or 404 body.
+`express.json()` runs before all route middleware. Until Amendment 2 is implemented, malformed JSON can therefore reach the generic handler before a session check; Issue 2 must record the corrected parse-error behaviour. No private goal/record/schedule data appears in a 403 or 404 body.
 
 ---
 
