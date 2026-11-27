@@ -1,6 +1,6 @@
 # Delivery 3 — Contract Amendments
 
-**Version:** 1.0  
+**Version:** 1.1  
 **Date:** 27 November 2026 (Asia/Bangkok)  
 **Author:** Chayanit Kuntanarumitkul (67070503408)  
 **Reviewer:** Kulchaya Paipinij (67070503406)  
@@ -48,19 +48,33 @@ If the codebase has no outbound adapter (which is expected — AD-15/AD-17), the
 
 ---
 
-## Amendment 2 — PD-03a: malformed-JSON error contract (AC-02a)
+## Amendment 2 — PD-03a: malformed-JSON error contract (AC-02b)
 
-**Contract:** Implied by the existing auth contract in `docs/sprints/sprint-1/F-01-auth.md` and Lab 7 post-deploy finding.  
-**Previous state:** `POST /api/auth/login` with a malformed (non-parseable) JSON body returned `500 INTERNAL_ERROR` (found in Lab 7 post-deploy check PD-03a). AC-02a was noted as having no automated test.  
-**New state (D3 amendment):** The correct response is `400` with a stable error code. AC-02a is now a required test in Issue 2.
+**Contract:** `docs/sprints/sprint-1/F-01-auth.md`, plus the shared error table (F-08 / NFR-05) for the new code.  
+**Previous version:** AC-02a requires `400 INVALID_LOGIN_REQUEST` when the login **email is malformed**. It is covered by TEST-01.8 and passes. No AC covers a request **body that is not valid JSON**, so the `500 INTERNAL_ERROR` found in the Lab 7 post-deploy check (PD-03a) had no requirement and no test.  
+**New version (D3 amendment):** adds **AC-02b** and **TEST-01.9**. AC-02a and TEST-01.8 are unchanged.
 
 ### What changes
 
 | Item | Before | After |
 |---|---|---|
-| `POST /api/auth/login` with malformed JSON body | 500 INTERNAL_ERROR (bug — PD-03a) | 400 with an appropriate error code (e.g., `INVALID_CREDENTIALS` or a JSON-parse error code) |
-| AC-02a test | No automated test | TEST-02a must be written, failing (red commit), then fixed (green commit) |
-| Issue #89 | Open | Closed after the green commit in Issue 2 |
+| `POST /api/auth/login` with a body that is not parseable JSON | `500 INTERNAL_ERROR` (PD-03a) | `400 INVALID_JSON` in the shared error envelope; no session is created |
+| Requirement covering it | None (gap found after release) | AC-02b (new) |
+| Automated test | None | TEST-01.9 (RED commit, then GREEN commit) |
+| AC-02a / TEST-01.8 | Pass | Unchanged |
+| Issue #89 | Reopened for Delivery 3 | Closed by the GREEN commit |
+
+### New acceptance criterion and test
+
+| ID | Observable outcome |
+|---|---|
+| **AC-02b** (new) | A login request whose body cannot be parsed as JSON returns `400` with `error.code = INVALID_JSON` and `details = {}`. No session cookie is set and the response contains no stack trace or internal message. Valid login, wrong password and unknown user behave exactly as before. |
+
+| Test ID | AC | Level | Setup / action | Expected result |
+|---|---|---|---|---|
+| TEST-01.9 | AC-02b | API | `POST /api/auth/login` with `Content-Type: application/json` and a truncated JSON body | `400`; `INVALID_JSON`; empty details; no `Set-Cookie`; no stack trace |
+
+The existing auth tests (TEST-01.x including TEST-01.8) must stay green.
 
 ### Error response target
 
@@ -68,13 +82,18 @@ If the codebase has no outbound adapter (which is expected — AD-15/AD-17), the
 HTTP 400
 {
   "error": {
-    "code": "INVALID_CREDENTIALS",
-    "message": "..."
+    "code": "INVALID_JSON",
+    "message": "The request body is not valid JSON.",
+    "details": {}
   }
 }
 ```
 
-The exact code must match the stable error vocabulary in `api/src/errors.ts`. If a new code is added, it must be added in the same commit as the fix.
+`INVALID_JSON` is a new code. It is added to `api/src/errors.ts` and to the shared error table **in the same commit as the fix**. A new code is used because parsing fails before route code runs, so a login-specific code is not available to a general handler.
+
+### Scope note: protected routes
+
+The fix is an app-level error handler, so other JSON routes also return `400` instead of `500` for malformed JSON. Protected routes must keep the AD-14 check order (401 → 403 → 404 → 400 → 409). Issue 2 must check whether the body parser runs before the session check; if so, either run the session check first or record the 400-before-401 ordering exception here. Only the login route is covered by TEST-01.9. The `access-control.sprint2` suite must stay green.
 
 ### Reason
 
@@ -82,46 +101,71 @@ A 500 on a client error (malformed request body) is a bug that leaks server inte
 
 ### Implementation instruction (for Issue 2 lead Kulchaya)
 
-1. Write a failing test for the malformed-JSON case in `api/tests/api/auth.test.ts`. Commit as **red** with message: `test: add failing test for PD-03a malformed-JSON login (AC-02a)`.
-2. Add an error handler or middleware that catches `SyntaxError` from `express.json()` and returns 400 with a stable code. Commit as **green** with message: `fix: return 400 for malformed-JSON login body (PD-03a, AC-02a, Closes #89)`.
-3. The fix must not change the behaviour of valid login, invalid credentials, or unknown-user cases.
+1. Write TEST-01.9 in `api/tests/api/auth.test.ts` and commit it as **red**: `test: add failing test for PD-03a malformed-JSON login (AC-02b)`.
+2. Add an app-level error handler for the body-parser `SyntaxError` that returns the `400 INVALID_JSON` envelope. Add the code to `errors.ts` in the same commit. Commit as **green**: `fix: return 400 INVALID_JSON for malformed JSON body (PD-03a, AC-02b, Closes #89)`.
+3. Confirm the fix does not change valid login, wrong password, unknown user, or 401/403/404 results. If permission behaviour changes, tell Chayanit so Issue 3 is re-run.
 
 ---
 
 ## Amendment 3 — S2-F04-R: Revise goal UI (GAP-07 resolution)
 
 **Contract:** `docs/deliverable-2/contracts/sprint-2/S2-F04-R-goal-revision.md`  
-**Previous version:** v1.0 — the contract defines API-level acceptance criteria (AC-S2-01 to AC-S2-06). The UI was not mentioned as a D2 deliverable.  
-**New version (D3 amendment v1.1):** The Revise Goal UI is added to the S2-F04-R scope for Delivery 3. The backend is already complete; this amendment adds the UI acceptance criteria.
+**Previous version:** v1.0 — the contract has a “UI behavior” section (owner action, live-validation form and revision history). Only its API and tests (AC-S2-01 to AC-S2-06) were delivered in D2; the UI was not built (GAP-07).  
+**New version (D3 amendment v1.1):** implements that UI behaviour and adds AC-S2-R01 to R06 with an STS. **There is no API change.**
 
 ### GAP-07 decision
 
 **Decision:** BUILD the Revise Goal UI.
 
-**Reason:** See `docs/deliverable-3/scope-freeze.md §4`. The UI is required for Part A demonstration and for FR-15. API-only amendment would leave a visible gap in the final assessed product.
+**Reason:** FR-15 requires a complete participant UI journey, the backend is already complete, and API-only revision would be a visible demonstration gap.
+
+**Fallback:** If the UI is not merged into `d3-staging` by **3 Dec**, amend this contract to API-only (v1.2), mark GAP-07 as a disclosed limitation, and record the date and reason.
 
 ### Additional acceptance criteria (D3 scope, implemented in Issue 4)
 
 | ID | Observable outcome |
 |---|---|
-| **AC-S2-R01** (new) | The Revise Goal form is accessible to the authenticated owner from the goal detail page. It pre-fills the current target and end date. |
-| **AC-S2-R02** (new) | Submitting a valid revision calls `POST /api/goals/:id/revisions`; on success the goal detail page shows updated target/end date and the new revision appears in the revision history section. |
-| **AC-S2-R03** (new) | Submitting an invalid revision (e.g. end date before start date, non-positive target, effective date before goal start) shows an inline validation error; no revision row is created. |
-| **AC-S2-R04** (new) | The goal detail page shows a revision history section listing all past revisions (version number, target, end date, effective date). |
-| **AC-S2-R05** (new) | A participant cannot revise another participant's goal through the UI; the backend enforces the ownership check (404) even if the form URL is guessed. |
-| **AC-S2-R06** (new) | After a revision, existing daily records are unchanged (the daily record list still shows pre-revision entries). |
+| **AC-S2-R01** (new) | The authenticated owner sees “Revise goal”; target and end date are pre-filled and start date is read-only. |
+| **AC-S2-R02** (new) | A valid revision sends only `target` and `end_date` to `POST /api/goals/:id/revisions`; on `201` the new values/version and revision persist after reload. |
+| **AC-S2-R03** (new) | Empty, zero, negative or non-numeric target, or an end date before the start date, shows an inline validation/API error; no revision is created and a saving state is shown. |
+| **AC-S2-R04** (new) | History is ascending by version and shows version, target, end date and display-only effective date. |
+| **AC-S2-R05** (new) | Another participant sees a safe not-found state with no form/data; API returns `404 GOAL_NOT_FOUND`. A Program Manager receives `403 ROLE_FORBIDDEN`. |
+| **AC-S2-R06** (new) | Daily records and history list are unchanged after revision; progress uses the new target (FR-11). |
 
-### Scope boundary (unchanged from D2)
+### Software Test Specification (STS)
+
+Level: **Playwright E2E**, using the existing `e2e/` setup; no component-test framework is added here.
+
+| Test ID | AC | Setup / action | Expected result |
+|---|---|---|---|
+| TEST-S2-R01 | R01 | Alice opens version-1 goal | Action visible; values pre-filled; start date read-only |
+| TEST-S2-R02 | R02 | Alice submits target 200 and an end date | Only target/end_date sent; 201; v2 persists after reload; history lists v1/v2 |
+| TEST-S2-R03a | R03 | Alice submits target 0 | Inline error; version/history unchanged |
+| TEST-S2-R03b | R03 | Alice submits an end date before start | Inline error; version/history unchanged |
+| TEST-S2-R04 | R04 | Goal has two revisions | Ascending history; effective date has no input |
+| TEST-S2-R05 | R05 | Bob opens Alice’s goal URL | Safe not-found; no form or goal data |
+| TEST-S2-R06 | R06 | Alice revises a goal with two records | Records identical; percentage uses new target |
+
+Existing API coverage is reused: TEST-S2-05a (manager 403), TEST-S2-05b (other participant 404), TEST-S2-02b / TEST-S2-03 (validation), and TEST-S2-04 (records unchanged). No new API RED is required for those cases.
+
+### Scope boundary
 
 - The UI calls the real backend only; no client-side state management workarounds.
-- Revisions are created with an explicit `effective_date`; the UI must expose this field.
+- The form sends only `target` and `end_date`; the server sets `effective_date`, which is display-only.
 - Existing `daily_records` rows are never modified by a revision.
-- A manager must not see the revision form or revision history for a participant's goal.
+- Past revisions cannot be edited or deleted.
+- A Program Manager has no access to participant goals or revisions.
+
+### Definition of Done
+
+- Every AC-S2-R01 to R06 has an executed result.
+- RED/GREEN commit hashes are recorded for R01–R04 and R06.
+- Screenshots show role, expected/actual and version; the existing suite stays green.
 
 ### Implementation instruction (for Issue 4 lead Chayanit)
 
-- Write RED tests for AC-S2-R01 through AC-S2-R06 before building the UI components.
-- GREEN commits follow after each acceptance criterion is satisfied.
+- Write RED E2E specs for R01–R04 and R06 before building. R05 reuses API tests and adds only the E2E check.
+- Add GREEN commits as each acceptance criterion is satisfied.
 - If any behaviour differs from the written ACs, update this document with the reason before the PR review.
 
 ---
@@ -131,5 +175,5 @@ A 500 on a client error (malformed request body) is a bug that leaks server inte
 | Amendment | Contract affected | AC/Test affected | Lead (Issue) | Status |
 |---|---|---|---|---|
 | 1 — TEST-S3-09 no-dispatch | S3-F11-R v1.0 → v1.1 | AC-S3-09; TEST-S3-09 | Kulchaya (Issue 2) | Required before Issue 2 first red commit |
-| 2 — PD-03a malformed-JSON | F-01-auth implied | AC-02a; TEST-02a | Kulchaya (Issue 2) | Required before Issue 2 first red commit |
-| 3 — S2-F04-R Revise UI | S2-F04-R v1.0 → v1.1 | AC-S2-R01 to R06 | Chayanit (Issue 4) | Required before Issue 4 first red commit |
+| 2 — PD-03a malformed-JSON | F-01 auth + shared error table | AC-02b (new); TEST-01.9; `INVALID_JSON` | Kulchaya (Issue 2) | Required before Issue 2 first red commit |
+| 3 — S2-F04-R Revise UI | S2-F04-R v1.0 → v1.1 | AC-S2-R01 to R06; TEST-S2-R01 to R06 | Chayanit (Issue 4) | Required before Issue 4 first red commit |
