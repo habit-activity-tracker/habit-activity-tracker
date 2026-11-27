@@ -28,7 +28,7 @@
 
 | # | Method | Full path | Auth | Role | Ownership | AC reference |
 |---|---|---|---|---|---|---|
-| E-00a | GET | `/api/health` | None | Any | None | OP-01 smoke |
+| E-00a | GET | `/api/health` | None | Any | None | OP-01 smoke; OP-02 commit SHA |
 | E-00b | GET | `/api/ready` | None | Any | None | OP-01 smoke |
 
 ### Authentication

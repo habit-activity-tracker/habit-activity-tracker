@@ -2,8 +2,9 @@ import { FormEvent, useEffect, useState } from 'react';
 import { TemplateSelector, type ActivityTemplate } from '../components/TemplateSelector';
 
 const todayBangkok = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+type CreatedGoal = { id: string };
 
-export const NewGoalPage = ({ onCreated }: { onCreated?: () => void }) => {
+export const NewGoalPage = ({ onCreated }: { onCreated?: (goal: CreatedGoal) => void }) => {
   const [templates, setTemplates] = useState<ActivityTemplate[]>([]);
   const [selected, setSelected] = useState<ActivityTemplate | null>(null);
   const [target, setTarget] = useState(''); const [startDate, setStartDate] = useState(todayBangkok()); const [endDate, setEndDate] = useState(todayBangkok());
@@ -15,7 +16,7 @@ export const NewGoalPage = ({ onCreated }: { onCreated?: () => void }) => {
       const response = await fetch('/api/goals', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ template_id: selected?.id, target: Number(target), start_date: startDate, end_date: endDate }) });
       const body = await response.json().catch(() => ({}));
       if (!response.ok) { setErrors(body.error?.details ?? {}); setMessage(body.error?.message ?? 'Unable to create goal.'); return; }
-      setMessage('Goal created.'); setTarget(''); onCreated?.();
+      setMessage('Goal created.'); setTarget(''); onCreated?.(body.goal as CreatedGoal);
     } catch { setMessage('Unable to create goal. Please try again.'); } finally { setSaving(false); }
   };
   return <section className="card" aria-label="Create personal goal"><h2>Create personal goal</h2>

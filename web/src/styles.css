@@ -80,6 +80,10 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .goal-item .title { font-weight: 600; }
 .goal-item .meta { color: var(--muted); font-size: .85rem; }
 .goal-item button { justify-self: start; }
+.revision-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; }
+.revision-heading h3 { margin-bottom: .25rem; }
+.revision-heading p { margin-bottom: 0; }
+.goal-revision-form { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
 
 /* Reminder form */
 .reminder-list { list-style: none; margin: 0 0 1rem; padding: 0; display: grid; gap: .5rem; }

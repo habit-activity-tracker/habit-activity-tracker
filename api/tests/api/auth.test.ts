@@ -25,14 +25,23 @@ afterEach(async () => { if (pool) await pool.end(); });
 
 describe('F-01 authentication and current user', () => {
   it('TEST-01.1 / AC-01.1 valid login returns safe user and sets a secure session cookie', async () => {
-    const response = await request(createApp(pool)).post('/api/auth/login').send({ email: 'ALICE@example.com', password });
-    expect(response.status).toBe(200);
-    expect(response.body.user).toEqual(expect.objectContaining({ email: 'alice@example.com', role: 'participant' }));
-    expect(response.body.user.password_hash).toBeUndefined();
-    const cookie = response.headers['set-cookie']?.[0] ?? '';
-    expect(cookie).toContain('habit_session=');
-    expect(cookie).toContain('HttpOnly');
-    expect(cookie).toContain('SameSite=Lax');
+    const previousSecureSetting = process.env.SESSION_COOKIE_SECURE;
+    process.env.SESSION_COOKIE_SECURE = 'true';
+    try {
+      const response = await request(createApp(pool)).post('/api/auth/login').send({ email: 'ALICE@example.com', password });
+      expect(response.status).toBe(200);
+      expect(response.body.user).toEqual(expect.objectContaining({ email: 'alice@example.com', role: 'participant' }));
+      expect(response.body.user.password_hash).toBeUndefined();
+      const cookie = response.headers['set-cookie']?.[0] ?? '';
+      expect(cookie).toContain('habit_session=');
+      expect(cookie).toContain('HttpOnly');
+      expect(cookie).toContain('SameSite=Lax');
+      expect(cookie).toContain('Secure');
+      expect(cookie).toContain('Max-Age=86400');
+    } finally {
+      if (previousSecureSetting === undefined) delete process.env.SESSION_COOKIE_SECURE;
+      else process.env.SESSION_COOKIE_SECURE = previousSecureSetting;
+    }
   });
 
   it('TEST-01.2 / AC-01.2 uses the same generic 401 for wrong password and unknown user', async () => {

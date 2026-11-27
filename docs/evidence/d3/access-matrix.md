@@ -13,7 +13,7 @@
 
 | Endpoint(s) | AC / feature | No session | Wrong role | Other participant record | Valid role/owner | Actual / result |
 |---|---|---|---|---|---|---|
-| E-00a `GET /api/health`, E-00b `GET /api/ready` | OP-01 | 200 | n/a | n/a | 200 | PASS (Docker 200; Cloud Run 200) |
+| E-00a `GET /api/health`, E-00b `GET /api/ready` | OP-01, OP-02 | 200 | n/a | n/a | 200 | Historical access check PASS (Docker and Cloud Run); Issue 4 commit-SHA response awaits deployment verification |
 | E-01 `POST /api/auth/login` | AC-01, AC-02, AC-02a, AC-02b; PD-03a | 200 valid; 400 malformed JSON; 401 bad password | n/a | n/a | 200 valid credentials | PASS (Docker and Cloud Run: 400/401/200) |
 | E-02 `GET /api/auth/me`, E-04 `GET /api/me` | AC-03, AC-04 | 401 `SESSION_REQUIRED` | n/a | n/a | 200 caller only | PASS (Docker & Cloud Run) |
 | E-03 `POST /api/auth/logout` | AC-05 | 401 `SESSION_REQUIRED` | n/a | n/a | 204 (then `/me` 401) | PASS (Docker & Cloud Run) |

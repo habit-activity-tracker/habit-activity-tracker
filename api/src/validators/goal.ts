@@ -4,6 +4,7 @@ export type GoalValidationResult = { valid: true; value: GoalInput } | { valid: 
 const allowedFields = new Set(['template_id', 'target', 'start_date', 'end_date', 'participantId']);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+const maxRevisionTarget = 99_999_999.99;
 
 const validDate = (value: string): boolean => {
   if (!datePattern.test(value)) return false;
@@ -45,7 +46,11 @@ export const validateGoalRevision = (input: unknown, goalStartDate?: string): Go
   if (!input || typeof input !== 'object' || Array.isArray(input)) return { valid: false, details: { body: 'A revision object is required.' } };
   const body = input as Record<string, unknown>;
   for (const key of Object.keys(body)) if (!revisionAllowedFields.has(key)) details[key] = 'This field is not allowed.';
-  if (typeof body.target !== 'number' || !Number.isFinite(body.target) || body.target <= 0) details.target = 'Target must be a positive number.';
+  if (typeof body.target !== 'number' || !Number.isFinite(body.target) || body.target <= 0) {
+    details.target = 'Target must be a positive number.';
+  } else if (body.target > maxRevisionTarget || Number(body.target.toFixed(2)) !== body.target || Number(body.target.toFixed(2)) <= 0) {
+    details.target = 'Target must be between 0.01 and 99,999,999.99, with at most two decimal places.';
+  }
   if (typeof body.end_date !== 'string' || !validDate(body.end_date)) details.end_date = 'End date must be a valid calendar date.';
   if (typeof body.end_date === 'string' && validDate(body.end_date) && goalStartDate && validDate(goalStartDate) && body.end_date < goalStartDate) {
     details.end_date = 'End date must be on or after start date.';

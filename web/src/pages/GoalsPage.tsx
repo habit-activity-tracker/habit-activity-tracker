@@ -4,15 +4,31 @@ import type { ActivityTemplate } from '../components/TemplateSelector';
 
 interface Goal { id: string; template_id: string; target: number; start_date: string; end_date: string; }
 
-export const GoalsPage = ({ refreshKey = 0, children }: { refreshKey?: number; children?: ReactNode }) => {
+export const GoalsPage = ({ refreshKey = 0, requestedGoalId, onGoalSelected, children }: { refreshKey?: number; requestedGoalId?: string | null; onGoalSelected?: () => void; children?: ReactNode }) => {
   const [goals, setGoals] = useState<Goal[]>([]); const [templates, setTemplates] = useState<ActivityTemplate[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null); const [loading, setLoading] = useState(true); const [error, setError] = useState<string | null>(null);
   useEffect(() => {
+    let active = true;
     setLoading(true);
     fetch('/api/activity-templates', { credentials: 'include' }).then((r) => r.json()).then((b) => setTemplates(b.templates ?? [])).catch(() => undefined);
-    fetch('/api/goals', { credentials: 'include' }).then(async (response) => { const body = await response.json(); if (!response.ok) throw new Error(body.error?.message || 'Unable to load goals.'); setGoals(body.goals); const remembered = localStorage.getItem('selectedGoalId'); setSelectedGoal(body.goals.find((goal: Goal) => goal.id === remembered) ?? null); }).catch((reason) => setError(reason instanceof Error ? reason.message : 'Unable to load goals.')).finally(() => setLoading(false));
-  }, [refreshKey]);
+    fetch('/api/goals', { credentials: 'include' }).then(async (response) => {
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error?.message || 'Unable to load goals.');
+      if (!active) return;
+      setGoals(body.goals);
+      const remembered = localStorage.getItem('selectedGoalId');
+      const selected = body.goals.find((goal: Goal) => goal.id === requestedGoalId) ?? body.goals.find((goal: Goal) => goal.id === remembered) ?? null;
+      if (selected) localStorage.setItem('selectedGoalId', selected.id);
+      setSelectedGoal(selected);
+      if (requestedGoalId) onGoalSelected?.();
+    }).catch((reason) => { if (active) setError(reason instanceof Error ? reason.message : 'Unable to load goals.'); }).finally(() => { if (active) setLoading(false); });
+    return () => { active = false; };
+  }, [refreshKey, requestedGoalId]);
   const select = (goal: Goal) => { localStorage.setItem('selectedGoalId', goal.id); setSelectedGoal(goal); };
+  const updateGoal = (updatedGoal: Goal) => {
+    setGoals((current) => current.map((goal) => goal.id === updatedGoal.id ? updatedGoal : goal));
+    setSelectedGoal((current) => current?.id === updatedGoal.id ? updatedGoal : current);
+  };
   const nameOf = (goal: Goal) => templates.find((item) => item.id === goal.template_id)?.name ?? 'Goal';
   return <div className="grid-sidebar">
     <div className="stack">
@@ -26,6 +42,6 @@ export const GoalsPage = ({ refreshKey = 0, children }: { refreshKey?: number; c
       </section>
       {children}
     </div>
-    <div>{selectedGoal ? <GoalPage goal={selectedGoal} /> : <p className="card empty">Select a goal to record activity and see your progress.</p>}</div>
+    <div>{selectedGoal ? <GoalPage goal={selectedGoal} onGoalUpdated={updateGoal} /> : <p className="card empty">Select a goal to record activity and see your progress.</p>}</div>
   </div>;
 };

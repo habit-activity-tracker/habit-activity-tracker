@@ -131,16 +131,16 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 |---|---|---|---|---|---|
 | GAP-01 | AC-43 | `PATCH` and `DELETE /api/goals/:id` must return `404 ROUTE_NOT_FOUND`; D2 recorded no automated test. Write meaningful assertions in Issue 2. | Kulchaya | 2 Dec | Issue 2 |
 | GAP-02 | Traceability | AC-34, AC-38, AC-44, and AC-50 have no component-level automated test. Add or mark INCOMPLETE in final matrix. | Kulchaya | 5 Dec | Issue 5 |
-| GAP-03 | NFR-03 / AC-06 | Log-plaintext inspection for passwords has not been executed. Inspect Cloud Run logs and record result. | Chayanit | 3 Dec | Issue 4 |
-| GAP-04 | AC-07 | Cookie `Secure` flag and expiry have not been verified. Check Set-Cookie header on deployed URL and record. | Chayanit | 3 Dec | Issue 4 |
+| GAP-03 | NFR-03 / AC-06 | Authentication source inspection found no submitted-password logging; Cloud Run log inspection for the deployed revision is still required and has not been executed. | Chayanit | 3 Dec | Issue 4 |
+| GAP-04 | AC-07 | API tests verify `Secure`, `HttpOnly`, `SameSite=Lax`, and `Max-Age`; inspect the deployed `Set-Cookie` header and record actual expiry. | Chayanit | 3 Dec | Issue 4 |
 | GAP-05 | NFR-06 | API statement coverage is 83.05%; target is ≥ 90%. Re-measure after Issues 2 and 4 on a commit close to final. If still below, record honestly and state plan. | Kulchaya | 5 Dec | Issue 5 |
 | GAP-06 | NFR-07 | Isolated restore exercise not done. Must use a separate Cloud SQL target; never overwrite production. Measure RTO and RPO. | Chayanit | 2 Dec (start), 5 Dec (close) | Issue 5 |
-| GAP-07 | S2-F04-R | Revise goal UI not built in Delivery 2. **Decision: BUILD the UI** in Delivery 3 (see §4). | Chayanit | 3 Dec | Issue 4 |
+| GAP-07 | S2-F04-R | Revise goal UI not built in Delivery 2. **Decision: BUILD the UI** in Delivery 3 (see §4); implementation is on `feature/d3-revision-ui-ops`, pending review. | Chayanit | 3 Dec | Issue 4 |
 | GAP-08 | S3-F11-R | AC-S3-09 (no-dispatch proof) has no automated test. TEST-S3-09 must be written and enabled. | Kulchaya | 2 Dec | Issue 2 |
 | GAP-09 | Traceability (D2) | Rows FR-10, BR-04, BR-06, NFR-01 cite wrong/vague test files; BR-10/BR-11 have insufficient PASS evidence. Correct them in the final matrix. | Chayanit | 7 Dec | Issue 6 |
 | PD-03a | Lab 7 / AC-02b | Invalid JSON to `POST /api/auth/login` returned `500 INTERNAL_ERROR`. Implement AC-02b and TEST-01.9 by RED/GREEN commits; Issue #89 closes on GREEN. | Kulchaya | 2 Dec | Issue 2 |
-| OP-01 | Lab 7 | Smoke credentials not configured; authenticated post-deploy check was skipped. Add safe post-deploy smoke check using seeded account (never commit credentials). | Chayanit | 3 Dec | Issue 4 |
-| OP-02 | Lab 7 | `GIT_COMMIT_SHA` env value was stale on deployed app. Correct the value via `github.sha` in deploy workflow. | Chayanit | 3 Dec | Issue 4 |
+| OP-01 | Lab 7 | Smoke credentials were not configured and the authenticated check was skipped. The deployment now fails unless private smoke credentials are configured and runs login, `/api/me`, and logout; deployment execution is still required. | Chayanit | 3 Dec | Issue 4 |
+| OP-02 | Lab 7 | `GIT_COMMIT_SHA` was stale. The release now sets it from the image SHA and reports it through health/UI; verify the deployed revision after deployment. | Chayanit | 3 Dec | Issue 4 |
 
 ---
 

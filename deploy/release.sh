@@ -26,7 +26,8 @@ else
 fi
 
 gcloud run services update "$SERVICE_NAME" \
-  --image="$DIGEST_IMAGE" --project="$PROJECT_ID" --region="$REGION" --quiet
+  --image="$DIGEST_IMAGE" --update-env-vars="GIT_COMMIT_SHA=$IMAGE_TAG" \
+  --project="$PROJECT_ID" --region="$REGION" --quiet
 gcloud run services update-traffic "$SERVICE_NAME" \
   --to-latest --project="$PROJECT_ID" --region="$REGION" --quiet
 
