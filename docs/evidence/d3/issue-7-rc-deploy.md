@@ -57,14 +57,14 @@ The smoke used `EXPECTED_COMMIT_SHA=3bb7830c44785841ee490dd0eb10a6431cd82d69`, `
 
 ## UAT and remaining work
 
-This successful deployment and team smoke test do **not** count as independent UAT. UAT-01 through UAT-11 in `docs/deliverable-3/uat-plan.md` remain **NOT RUN** until named independent testers execute them and record their own observed results.
+The successful deployment and team smoke test were kept separate from independent UAT. UAT-01 through UAT-11 are now recorded below from the official RC origin, with 11/11 PASS and no new defect.
 
 Remaining Issue #133 work:
 
-1. Assign independent testers; execute and record UAT-01 through UAT-11.
-2. Create the defect register from actual UAT findings; fix and re-test any defects.
-3. Update the traceability matrix/documents and conduct the final technical-debt review from actual UAT evidence.
-4. Run the documented RC-only cleanup after UAT and evidence retention approval.
+1. Retain the redacted UAT evidence and screenshots with the submission.
+2. Create and link a defect record if a later retest finds a new issue.
+3. Conduct the final technical-debt review from the recorded UAT evidence.
+4. Run the documented RC-only cleanup after evidence retention approval.
 
 The provision plan is retained in [rc-cloud-shell-provisioning.md](rc-cloud-shell-provisioning.md). It is a plan, not a claim that every planned command was used in the actual deployment.
 
