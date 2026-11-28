@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Deploy an already-pushed immutable image to an isolated RC service only.
 # This script deliberately has no defaults for service, job, project, or image.
-set -euo pipefail
+set -Eeuo pipefail
 
 : "${PROJECT_ID:?Set the approved non-production project ID.}"
 : "${REGION:?Set the approved RC region.}"

@@ -105,6 +105,8 @@ After approval, record the actual values below; do not fill them from a planned 
 
 ## Cloud Shell runbook — execute only after approval
 
+**Superseded for execution:** use [rc-cloud-shell-provisioning.md](rc-cloud-shell-provisioning.md), which pins the exact source commit, uses fail-fast existence checks, and verifies each created resource. This retained section is planning history only.
+
 This is a prepared plan, **not evidence of execution**. Steps 1–2 are read-only. Steps 3–7 create billable resources and require explicit approval and a budget confirmation. Do not substitute `habit-tracker`, `habit-tracker-migrate`, `habit-tracker-pg`, `habit-tracker-restore-check-20261127`, or a production credential/database identifier.
 
 ```sh
