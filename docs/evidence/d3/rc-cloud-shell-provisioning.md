@@ -45,6 +45,13 @@ git worktree add --detach ../habit-tracker-rc-source "$RC_SOURCE_COMMIT"
 export RC_SOURCE_DIR="$(cd ../habit-tracker-rc-source && pwd)"
 test "$(git -C "$RC_SOURCE_DIR" rev-parse HEAD)" = "$RC_SOURCE_COMMIT"
 
+# Verify, do not assume: the pinned runtime exposes 3000 and the health handler
+# returns both status and the GIT_COMMIT_SHA value that step 7 will set.
+git -C "$RC_SOURCE_DIR" show "${RC_SOURCE_COMMIT}:Dockerfile" | grep -Fqx 'EXPOSE 3000'
+git -C "$RC_SOURCE_DIR" show "${RC_SOURCE_COMMIT}:Dockerfile" | grep -Fqx 'CMD ["node", "api/dist/src/server.js"]'
+git -C "$RC_SOURCE_DIR" show "${RC_SOURCE_COMMIT}:api/src/app.ts" | grep -Fq "response.status(200).json({ status: 'ok', commit: process.env.GIT_COMMIT_SHA ?? null });"
+export RC_CONTAINER_PORT=3000
+
 # Production and retained restore-check names are forbidden, not prefixes.
 for selected in "$RC_SERVICE_NAME" "$RC_MIGRATE_JOB_NAME" "$RC_SEED_JOB_NAME" "$RC_SQL_INSTANCE"; do
   for protected in habit-tracker habit-tracker-migrate habit-tracker-seed habit-tracker-pg habit-tracker-restore-check-20261127; do
@@ -68,6 +75,14 @@ for name in "$RC_MIGRATE_JOB_NAME" "$RC_SEED_JOB_NAME"; do ! grep -Fxq "$name" <
 ! grep -Fxq "$RC_SQL_INSTANCE" <<<"$SQL_INSTANCES" || { echo 'RC SQL instance exists' >&2; exit 2; }
 ! grep -Fxq "$RC_SA_EMAIL" <<<"$SERVICE_ACCOUNTS" || { echo 'RC service account exists' >&2; exit 2; }
 for name in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do ! grep -Fxq "$name" <<<"$SECRETS" || { echo "RC secret exists: $name" >&2; exit 2; }; done
+
+# Reuse only the existing repository. The distinct RC tag must be absent, so a
+# Cloud Build push cannot replace an unrelated image carrying a shared SHA tag.
+export AR_REPOSITORY='habit-tracker'
+gcloud artifacts repositories describe "$AR_REPOSITORY" --location="$REGION" --project="$PROJECT_ID" --format='value(name)' | grep -Fxq "projects/${PROJECT_ID}/locations/${REGION}/repositories/${AR_REPOSITORY}"
+export RC_IMAGE_TAG="rc-${RC_SUFFIX}-${RC_SOURCE_COMMIT}"
+IMAGE_TAGS="$(gcloud artifacts docker tags list "${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}/habit-tracker" --project="$PROJECT_ID" --format='value(tag)')"
+! grep -Fq ":${RC_IMAGE_TAG}" <<<"$IMAGE_TAGS" || { echo "RC image tag exists: $RC_IMAGE_TAG" >&2; exit 2; }
 ```
 
 ## 3. Create the runtime identity — **creates an IAM resource**
@@ -112,10 +127,10 @@ for secret in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECR
   gcloud secrets get-iam-policy "$secret" --project="$PROJECT_ID" --flatten='bindings[].members' --filter="bindings.role:roles/secretmanager.secretAccessor AND bindings.members:serviceAccount:${RC_SA_EMAIL}" --format='value(bindings.role)' | grep -Fxq 'roles/secretmanager.secretAccessor'
 done
 
-export IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/habit-tracker/habit-tracker:${RC_SOURCE_COMMIT}"
+export IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}/habit-tracker:${RC_IMAGE_TAG}"
 gcloud builds submit "$RC_SOURCE_DIR" --tag="$IMAGE_URI" --project="$PROJECT_ID" --quiet
 export RC_IMAGE_DIGEST="$(gcloud artifacts docker images describe "$IMAGE_URI" --project="$PROJECT_ID" --format='value(image_summary.fully_qualified_digest)')"
-[[ "$RC_IMAGE_DIGEST" == "${REGION}-docker.pkg.dev/${PROJECT_ID}/habit-tracker/habit-tracker@sha256:"* ]] || { echo 'Immutable digest was not resolved.' >&2; exit 2; }
+[[ "$RC_IMAGE_DIGEST" == "${REGION}-docker.pkg.dev/${PROJECT_ID}/${AR_REPOSITORY}/habit-tracker@sha256:"* ]] || { echo 'Immutable digest was not resolved.' >&2; exit 2; }
 ```
 
 ## 6. Migrate and seed before exposing the service — **creates Cloud Run jobs / execution billing**
@@ -138,7 +153,7 @@ gcloud run jobs execute "$RC_SEED_JOB_NAME" --project="$PROJECT_ID" --region="$R
 ## 7. Deploy and verify the isolated service — **creates Cloud Run revision / request billing**
 
 ```bash
-gcloud run deploy "$RC_SERVICE_NAME" --image="$RC_IMAGE_DIGEST" --region="$REGION" --allow-unauthenticated --service-account="$RC_SA_EMAIL" --add-cloudsql-instances="$RC_SQL_CONNECTION_NAME" --set-secrets="$RC_SECRETS" --set-env-vars="$RC_ENV" --min-instances=0 --max-instances=1 --memory=512Mi --cpu=1 --port=3000 --project="$PROJECT_ID" --quiet
+gcloud run deploy "$RC_SERVICE_NAME" --image="$RC_IMAGE_DIGEST" --region="$REGION" --allow-unauthenticated --service-account="$RC_SA_EMAIL" --add-cloudsql-instances="$RC_SQL_CONNECTION_NAME" --set-secrets="$RC_SECRETS" --set-env-vars="$RC_ENV" --min-instances=0 --max-instances=1 --memory=512Mi --cpu=1 --port="$RC_CONTAINER_PORT" --project="$PROJECT_ID" --quiet
 for required in "$RC_SA_EMAIL" "$RC_SQL_CONNECTION_NAME" "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format=export | grep -Fq "$required"; done
 export RC_SERVICE_URL="$(gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='value(status.url)')"
 curl --fail --silent --show-error "$RC_SERVICE_URL/api/health" | grep -Fq "${RC_SOURCE_COMMIT}"
@@ -156,6 +171,16 @@ python3 deploy/smoke_test.py "$RC_SERVICE_URL"
 unset SMOKE_EMAIL SMOKE_PASSWORD EXPECTED_COMMIT_SHA
 ```
 
+## 7a. Give the independent tester one-secret access — **IAM change, not billable**
+
+Use the tester's own Google account; do not retrieve the password as an operator or send it over chat/email. This grants access to the RC demo-password secret only (not project-wide Secret Manager, the database URL, or session secret). The tester opens **Secret Manager → the exact RC secret → Access secret version**, types it directly into the RC login, and does not screenshot, forward, save, or place it in the UAT evidence.
+
+```bash
+: "${RC_TESTER_GCP_EMAIL:?Set the confirmed independent tester Google-account email}"
+gcloud secrets add-iam-policy-binding "$RC_DEMO_PASSWORD_SECRET" --member="user:${RC_TESTER_GCP_EMAIL}" --role='roles/secretmanager.secretAccessor' --project="$PROJECT_ID" --quiet
+gcloud secrets get-iam-policy "$RC_DEMO_PASSWORD_SECRET" --project="$PROJECT_ID" --flatten='bindings[].members' --filter="bindings.role:roles/secretmanager.secretAccessor AND bindings.members:user:${RC_TESTER_GCP_EMAIL}" --format='value(bindings.role)' | grep -Fxq 'roles/secretmanager.secretAccessor'
+```
+
 ## 8. Cleanup after UAT — **destructive, RC-only**
 
 Before cleanup, retain only redacted URL, commit, digest, revision, traffic, and test evidence. Re-run the protected-name loop from step 1, then:
@@ -165,7 +190,10 @@ gcloud run services delete "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="
 gcloud run jobs delete "$RC_MIGRATE_JOB_NAME" --project="$PROJECT_ID" --region="$REGION" --quiet
 gcloud run jobs delete "$RC_SEED_JOB_NAME" --project="$PROJECT_ID" --region="$REGION" --quiet
 gcloud sql instances delete "$RC_SQL_INSTANCE" --project="$PROJECT_ID" --quiet
+if test -n "${RC_TESTER_GCP_EMAIL:-}"; then gcloud secrets remove-iam-policy-binding "$RC_DEMO_PASSWORD_SECRET" --member="user:${RC_TESTER_GCP_EMAIL}" --role='roles/secretmanager.secretAccessor' --project="$PROJECT_ID" --quiet; fi
 for secret in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do gcloud secrets delete "$secret" --project="$PROJECT_ID" --quiet; done
+gcloud projects remove-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${RC_SA_EMAIL}" --role='roles/cloudsql.client' --condition=None --quiet
+! gcloud projects get-iam-policy "$PROJECT_ID" --flatten='bindings[].members' --filter="bindings.role:roles/cloudsql.client AND bindings.members:serviceAccount:${RC_SA_EMAIL}" --format='value(bindings.role)' | grep -Fxq 'roles/cloudsql.client'
 gcloud iam service-accounts delete "$RC_SA_EMAIL" --project="$PROJECT_ID" --quiet
 ```
 
