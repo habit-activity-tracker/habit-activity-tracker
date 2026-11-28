@@ -1,7 +1,7 @@
 # Delivery 3 — Independent UAT plan
 
 **Audience:** Kulchaya's independent testers.  
-**Candidate:** fill in the approved isolated RC URL, revision, immutable digest and commit before execution.  
+**Candidate:** `https://habit-tracker-rc-20261128-860543640437.asia-southeast1.run.app`; revision `habit-tracker-rc-20261128-00001-q7n`; commit `3bb7830c44785841ee490dd0eb10a6431cd82d69`; image `sha256:2e7ef50448a775fc4ba6c9e908b1af4f952f500364d60ed9263ae9105ef3a69d`.
 **Safety:** use only supplied RC test accounts/data. Do not use production accounts, secrets, cookies, connection strings, or real personal data. Record a result only after executing the stated check.
 
 ## Tester instructions
@@ -30,8 +30,8 @@
 
 | Field | Value |
 |---|---|
-| RC URL / Cloud Run revision | Not deployed — fill after approval |
-| Commit / immutable digest | Not deployed — fill after approval |
+| RC URL / Cloud Run revision | `https://habit-tracker-rc-20261128-860543640437.asia-southeast1.run.app` / `habit-tracker-rc-20261128-00001-q7n` |
+| Commit / immutable digest | `3bb7830c44785841ee490dd0eb10a6431cd82d69` / `sha256:2e7ef50448a775fc4ba6c9e908b1af4f952f500364d60ed9263ae9105ef3a69d` |
 | Tester(s) | Not assigned |
 | UAT cases passed / failed / blocked / not run | 0 / 0 / 0 / 11 at document creation |
 | Defects linked | None — no UAT executed |
