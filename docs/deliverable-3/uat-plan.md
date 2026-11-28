@@ -14,7 +14,7 @@
 
 | ID | Role / setup | UAT action and expected outcome | Result / evidence (tester completes) |
 |---|---|---|---|
-| UAT-01 | Anonymous | Open `/api/health`, `/api/ready`, and the UI. Expect health/ready 200 and the login UI. | NOT RUN |
+| UAT-01 | Anonymous | Open `/api/health`, `/api/ready`, and the UI. Expect health/ready 200 and the login UI. | **PASS** — Kulchaya, 28 November 2026 ICT. `/api/health` returned HTTP 200 with commit `3bb7830c44785841ee490dd0eb10a6431cd82d69`; `/api/ready` returned HTTP 200; UI root returned HTTP 200. Console output recorded in the Issue 7 evidence/PR thread. |
 | UAT-02 | Participant | Log in with supplied RC participant account; confirm the displayed current user/role and log out. After logout, protected page/API requires login. | NOT RUN |
 | UAT-03 | Program Manager | Create an active template with an agreed test name/range; confirm a participant cannot create or edit it. | NOT RUN |
 | UAT-04 | Participant | Browse active templates; create a goal with a valid period-total target and valid dates. Confirm it appears only in the participant's list. | NOT RUN |
@@ -33,7 +33,7 @@
 | RC URL / Cloud Run revision | `https://habit-tracker-rc-20261128-860543640437.asia-southeast1.run.app` / `habit-tracker-rc-20261128-00001-q7n` |
 | Commit / immutable digest | `3bb7830c44785841ee490dd0eb10a6431cd82d69` / `sha256:2e7ef50448a775fc4ba6c9e908b1af4f952f500364d60ed9263ae9105ef3a69d` |
 | Tester(s) | Not assigned |
-| UAT cases passed / failed / blocked / not run | 0 / 0 / 0 / 11 at document creation |
+| UAT cases passed / failed / blocked / not run | 1 / 0 / 0 / 10 after Kulchaya's UAT-01 run |
 | Defects linked | None — no UAT executed |
 
 The RC evidence record is `docs/evidence/d3/issue-7-rc-deploy.md`; technical-debt decisions are in `technical-debt.md`. Testers must not infer a result from automated evidence or from this plan.
