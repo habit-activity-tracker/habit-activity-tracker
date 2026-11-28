@@ -67,3 +67,21 @@ Remaining Issue #133 work:
 4. Run the documented RC-only cleanup after UAT and evidence retention approval.
 
 The provision plan is retained in [rc-cloud-shell-provisioning.md](rc-cloud-shell-provisioning.md). It is a plan, not a claim that every planned command was used in the actual deployment.
+
+## Independent UAT evidence
+
+### UAT-01 — Anonymous health, readiness, and UI
+
+- **Tester:** Kulchaya
+- **Date:** 28 November 2026 (Asia/Bangkok)
+- **Revision:** `habit-tracker-rc-20261128-00001-q7n`
+- **Source commit:** `3bb7830c44785841ee490dd0eb10a6431cd82d69`
+- **Method:** PowerShell `Invoke-WebRequest`; no credentials, cookies, or secrets used
+
+| Request | Result |
+|---|---|
+| `GET /api/health` | HTTP 200; `{"status":"ok","commit":"3bb7830c44785841ee490dd0eb10a6431cd82d69"}` |
+| `GET /api/ready` | HTTP 200; `{"status":"ready"}` |
+| `GET /` | HTTP 200; web application HTML returned |
+
+**UAT-01 result: PASS.** UAT-02 through UAT-11 remain NOT RUN until independently executed.
