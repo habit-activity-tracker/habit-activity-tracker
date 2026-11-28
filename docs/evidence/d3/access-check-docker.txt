@@ -1,0 +1,23 @@
+PASS E-00a health                                         expected=200 actual=200
+PASS E-00b ready                                          expected=200 actual=200
+PASS E-01 malformed JSON login                            expected=400 actual=400
+PASS E-01 invalid credentials                             expected=401 actual=401
+PASS E-01 PM login                                        expected=200 actual=200
+PASS E-01 Alice login                                     expected=200 actual=200
+PASS E-01 Bob login                                       expected=200 actual=200
+PASS no-session /api/auth/me                              expected=401 actual=401
+PASS Alice /api/auth/me                                   expected=200 actual=200
+PASS no-session /api/me                                   expected=401 actual=401
+PASS Alice /api/me                                        expected=200 actual=200
+PASS E-03 no-session logout                               expected=401 actual=401
+PASS no-session POST /api/activity-templates              expected=401 actual=401
+PASS Alice POST /api/activity-templates                   expected=403 actual=403
+PASS no-session POST /api/templates                       expected=401 actual=401
+PASS Alice POST /api/templates                            expected=403 actual=403
+PASS E-05 PM POST /api/activity-templates                 expected=201 actual=201
+PASS no-session GET /api/activity-templates               expected=401 actual=401
+PASS Alice GET /api/activity-templates                    expected=200 actual=200
+PASS PM GET /api/activity-templates                       expected=200 actual=200
+PASS no-session GET /api/templates                        expected=401 actual=401
+PASS Alice GET /api/templates                             expected=200 actual=200
+PASS PM GET /api/templates                                expected=200 actual=200

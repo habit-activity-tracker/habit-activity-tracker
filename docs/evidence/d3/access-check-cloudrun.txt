@@ -1,0 +1,83 @@
+Role: Chayanit (lead)
+Date: 2026-11-27 (Asia/Bangkok)
+Environment: Cloud Run via Google Cloud Shell
+Service: habit-tracker
+Revision: habit-tracker-00013-vwx
+Traffic: 100%
+Image: sha256:f27136c01ca9d6f7159b01a43aa8bc23df7b4b166bbb159718eee6c78467adc9
+Result:
+PASS E-00a health                                         expected=200 actual=200
+PASS E-00b ready                                          expected=200 actual=200
+FAIL E-01 malformed JSON login                            expected=400 actual=500
+PASS E-01 invalid credentials                             expected=401 actual=401
+PASS E-01 PM login                                        expected=200 actual=200
+PASS E-01 Alice login                                     expected=200 actual=200
+PASS E-01 Bob login                                       expected=200 actual=200
+PASS no-session /api/auth/me                              expected=401 actual=401
+PASS Alice /api/auth/me                                   expected=200 actual=200
+PASS no-session /api/me                                   expected=401 actual=401
+PASS Alice /api/me                                        expected=200 actual=200
+PASS E-03 no-session logout                               expected=401 actual=401
+PASS no-session POST /api/activity-templates              expected=401 actual=401
+PASS Alice POST /api/activity-templates                   expected=403 actual=403
+PASS no-session POST /api/templates                       expected=401 actual=401
+PASS Alice POST /api/templates                            expected=403 actual=403
+PASS E-05 PM POST /api/activity-templates                 expected=201 actual=201
+PASS no-session GET /api/activity-templates               expected=401 actual=401
+PASS Alice GET /api/activity-templates                    expected=200 actual=200
+PASS PM GET /api/activity-templates                       expected=200 actual=200
+PASS no-session GET /api/templates                        expected=401 actual=401
+PASS Alice GET /api/templates                             expected=200 actual=200
+PASS PM GET /api/templates                                expected=200 actual=200
+PASS no-session PATCH /api/activity-templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=401 actual=401
+PASS Alice PATCH /api/activity-templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=403 actual=403
+PASS PM PATCH /api/activity-templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=200 actual=200
+PASS no-session PATCH /api/templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=401 actual=401
+PASS Alice PATCH /api/templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=403 actual=403
+PASS PM PATCH /api/templates/d16510c6-c71b-496f-9382-506e698c3ba3 expected=200 actual=200
+PASS E-08 no-session POST goals                           expected=401 actual=401
+PASS E-08 PM POST goals                                   expected=403 actual=403
+PASS E-09 no-session GET goals                            expected=401 actual=401
+PASS E-09 PM GET goals                                    expected=403 actual=403
+PASS E-09 Alice GET goals                                 expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11 expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11 expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11 expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11 expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/summary expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/summary expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/summary expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/summary expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/revisions expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/revisions expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/revisions expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/revisions expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=200 actual=200
+PASS no-session GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/progress expected=401 actual=401
+PASS PM GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/progress expected=403 actual=403
+PASS Bob GET Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/progress expected=404 actual=404
+PASS Alice GET /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/progress expected=200 actual=200
+PASS E-12 no-session POST revision                        expected=401 actual=401
+PASS E-12 PM POST revision                                expected=403 actual=403
+PASS E-12 Bob POST Alice revision                         expected=404 actual=404
+PASS E-12 Alice POST revision                             expected=201 actual=201
+PASS no-session POST /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=401 actual=401
+PASS PM POST /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=403 actual=403
+PASS Bob POST Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/reminder-schedules expected=404 actual=404
+PASS no-session POST /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=401 actual=401
+PASS PM POST /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=403 actual=403
+PASS Bob POST Alice /api/goals/561f5c59-639d-4b13-8024-17bf87dbec11/records expected=404 actual=404
+PASS E-14 Alice POST reminder                             expected=201 actual=201
+PASS E-16 Alice POST record                               expected=201 actual=201
+PASS AC-43 PATCH absent route                             expected=404 actual=404
+PASS AC-43 DELETE absent route                            expected=404 actual=404
+PASS E-03 Alice valid logout                              expected=204 actual=204
+PASS E-03 Alice /me after logout                          expected=401 actual=401
+SUMMARY pass=73 fail=1 version=habit-tracker-00013-vwx

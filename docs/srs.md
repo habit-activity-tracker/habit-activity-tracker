@@ -130,6 +130,33 @@ Out of scope: medical diagnosis, treatment advice, clinical interpretation, noti
 | NFR-01 performance | `docs/evidence/d2-s2/performance-benchmark.md`: 100,002 rows, 1,000 measured authenticated reads, p95 187.46 ms | PASS against <=500 ms, S2-F10-P / `5b6353e` |
 | F-11 / FR-16 | `api/tests/api/reminder-schedules.test.ts`; `docs/evidence/d2-s3/issue-106-reminders.md` | PASS, PR #120 merged at `7e8ca5b` |
 | CR-01 | `api/tests/api/records.test.ts`; Part A continuity/change register | Implemented and regression-evidenced; preserve final rerun evidence |
-| NFR-06 | Lab 7 recorded API statement coverage 83.05% | GAP: below 90%; re-measurement remains planned, not PASS |
-| NFR-07 | `S3-F10-O-operational-readiness.md` | Planned final deployment/restore verification |
+| NFR-06 | Issue 5 measured 83 API tests passed and 88.24% service/domain statements | GAP: below 90%; AC-S3-13 remains INCOMPLETE, not PASS |
+| NFR-07 | `docs/evidence/d3/issue-5-coverage-readiness.md` | Isolated restore/RTO evidence completed; full RPO remains INCOMPLETE |
+
+## Part E — Delivery 3 final release status
+
+This section supersedes the provisional Delivery 2 verification wording where Delivery 3 supplied later evidence. The release baseline is `d3-staging` merge `0d876ab`; the final row-by-row result and commit mapping are in [traceability.md](traceability.md).
+
+### Released behaviour and approved changes
+
+- **CR-01 remains in force:** new records may be created only for today through seven calendar days ago in `APP_TIMEZONE`; existing older rows remain readable and are not rewritten.
+- **Goal lifecycle:** direct `PATCH` and `DELETE /api/goals/:id` remain absent. Participants make owner-scoped, versioned revisions; records remain immutable.
+- **Reminder scope:** F-11 is schedule creation/listing (maximum three per active goal) and strict-future occurrence calculation only. No notification provider, channel, queue, opt-in, or dispatch is implemented.
+- **Error contract:** malformed JSON is a `400 INVALID_JSON` shared-envelope response; it does not create a session.
+
+### Final measurable NFR comparison
+
+| NFR | Target | Measured/reviewed evidence | Final result |
+|---|---|---|---|
+| NFR-01 | 100,000 seeded records; authenticated-read p95 ≤500 ms | 100,002 rows; p95 187.46 ms in `performance-benchmark.md` | PASS |
+| NFR-02 | Protected routes reject anonymous access (401) and improper role/owner access (403/404) without private data | D3 access matrix passed 74/74 in Docker and Cloud Run | PASS |
+| NFR-03 | bcrypt cost ≥12 and no plaintext passwords in logs | bcrypt is tested; deployed-log inspection was not run | INCOMPLETE |
+| NFR-04 | UTC persistence and `APP_TIMEZONE` calendar rules | `timestamptz` schema review and Bangkok injected-clock record boundary test | PASS |
+| NFR-05 | Stable documented JSON error envelope/codes | validator/API contracts plus malformed-JSON regression | PASS |
+| NFR-06 | service/domain statement coverage ≥90% and permission coverage | 83 API tests passed; service/domain statements 88.24% | INCOMPLETE — below target; AC-S3-13 is not PASS |
+| NFR-07 | RTO ≤4h and RPO ≤24h | isolated restore reached ready in 57m22s; backup age was 13h10m58s, but incident interval was not measured | INCOMPLETE — RTO passes, complete RPO evidence is absent |
+
+### Final disclosed gaps
+
+AC-34, AC-38, AC-44, and AC-50 have no dedicated component-level automated test and remain INCOMPLETE. GAP-06 is complete as an isolated restore exercise, but it does not convert NFR-07 to PASS because RPO was not fully measured. No statement in this SRS treats coverage below 90% or AC-S3-13 as a pass.
 
