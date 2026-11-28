@@ -145,7 +145,16 @@ curl --fail --silent --show-error "$RC_SERVICE_URL/api/health" | grep -Fq "${RC_
 curl --fail --silent --show-error "$RC_SERVICE_URL/api/ready" | grep -Fq '"status":"ready"'
 ```
 
-Run `EXPECTED_COMMIT_SHA="$RC_SOURCE_COMMIT" SMOKE_EMAIL='pm1@example.com' SMOKE_PASSWORD='<read privately>' python3 deploy/smoke_test.py "$RC_SERVICE_URL"` only after obtaining the RC demo password through an approved private path. Never write it into the shell history or evidence.
+Run the authenticated smoke only after obtaining the RC demo password through an approved private path. Never write it into shell history or evidence:
+
+```bash
+export EXPECTED_COMMIT_SHA="$RC_SOURCE_COMMIT"
+export SMOKE_EMAIL='pm1@example.com'
+read -rs -p 'RC demo password: ' SMOKE_PASSWORD; echo
+export SMOKE_PASSWORD
+python3 deploy/smoke_test.py "$RC_SERVICE_URL"
+unset SMOKE_EMAIL SMOKE_PASSWORD EXPECTED_COMMIT_SHA
+```
 
 ## 8. Cleanup after UAT — **destructive, RC-only**
 
