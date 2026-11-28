@@ -101,10 +101,10 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | AC-06 | **PARTIAL** | bcrypt assertion exists; inspect deployed logs for plaintext passwords (GAP-03). |
 | AC-07 | **PARTIAL** | `HttpOnly`/`SameSite` checked; verify `Secure` and expiry (GAP-04). |
 | AC-27 | **PARTIAL** | Obtain UI safe-denial/component evidence or mark INCOMPLETE (GAP-02). |
-| SEC-01 | **OPEN** | Record security impact and remediation/defer decision in Issue 7 debt register. |
-| OBS-01 | **OPEN** | Record observability impact and next action in Issue 7 debt register. |
-| S3-Q01 | **OPEN** | CSRF/rate-limiting debt (SEC-01); record impact and remediation/defer decision in Issue 7. |
-| S3-Q02 | **OPEN** | Error-logging debt (OBS-01); record observability impact and next action in Issue 7. |
+| SEC-01 | **OPEN** | Impact, priority and next action are maintained in [technical-debt.md](technical-debt.md); no unapproved security feature is claimed. |
+| OBS-01 | **OPEN** | Impact, priority and safe-logging next action are maintained in [technical-debt.md](technical-debt.md). |
+| S3-Q01 | **OPEN** | CSRF/rate-limiting debt (SEC-01); see [technical-debt.md](technical-debt.md). |
+| S3-Q02 | **OPEN** | Error-logging debt (OBS-01); see [technical-debt.md](technical-debt.md). |
 
 ### Sprint 2 delivery items
 
