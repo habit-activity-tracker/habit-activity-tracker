@@ -139,8 +139,8 @@ Statuses: **DONE** = implemented and tested with evidence (provisional until ind
 | GAP-08 | S3-F11-R | **Closed:** TEST-S3-09 is enabled in `reminder-schedules.test.ts` and asserts zero outbound fetch calls on create/list/compute. | Kulchaya | Completed 27 Nov | Issue 2 |
 | GAP-09 | Traceability (D2) | Rows FR-10, BR-04, BR-06, NFR-01 cite wrong/vague test files; BR-10/BR-11 have insufficient PASS evidence. Correct them in the final matrix. | Chayanit | 7 Dec | Issue 6 |
 | PD-03a | Lab 7 / AC-02b | **Closed:** malformed JSON returns the shared `400 INVALID_JSON` response; RED/GREEN evidence is in `issue-2-tests-fixes.md`. | Kulchaya | Completed 27 Nov | Issue 2 |
-| OP-01 | Lab 7 | Smoke credentials were not configured and the authenticated check was skipped. The deployment now fails unless private smoke credentials are configured and runs login, `/api/me`, and logout; deployment execution is still required. | Chayanit | 3 Dec | Issue 4 |
-| OP-02 | Lab 7 | `GIT_COMMIT_SHA` was stale. The release now sets it from the image SHA and reports it through health/UI; verify the deployed revision after deployment. | Chayanit | 3 Dec | Issue 4 |
+| OP-01 | Lab 7 | Authenticated smoke remains unverified for the RC. The exact isolated-RC runbook is in `docs/evidence/d3/issue-7-rc-deploy.md`; do not accept an unauthenticated-only result. | Chayanit | RC approval required | Issue 7 |
+| OP-02 | Lab 7 | RC commit/revision traceability remains unverified. `deploy/rc-release.sh` sets the candidate SHA only on the isolated RC service; record `/api/health`, revision and immutable digest after execution. | Chayanit | RC approval required | Issue 7 |
 
 ---
 

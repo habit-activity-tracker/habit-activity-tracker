@@ -11,10 +11,14 @@ This is a debt register, not an implementation claim. Items become DONE only aft
 | GAP-03 / NFR-03 | Deployed plaintext-password log inspection | bcrypt storage is tested, but deployed-log evidence has not proved submitted passwords are absent. | High | OPEN / INCOMPLETE. | Inspect only approved RC logs with a redaction-safe procedure; record command scope and PASS/FAIL without copying secrets. | Chayanit |
 | GAP-04 | Deployed cookie attributes | Local/API evidence exists, but deployed `Set-Cookie` Secure/expiry evidence is absent. | Medium | OPEN / INCOMPLETE. | Inspect the approved RC login response with RC-only credentials; record attribute names/results, never cookie values. | Chayanit |
 | NFR-07 / GAP-06 | Complete RPO evidence | Isolated restore proved RTO (57m22s) but did not measure a full incident-to-recovery RPO interval. | Medium | PARTIAL — restore exercise completed. | Define incident timestamp and backup-selection procedure; run a non-production exercise and measure RPO ≤24h without touching source/production. | Chayanit |
-| OP-01 / OP-02 | RC deployment traceability and authenticated smoke | Current pipeline evidence is not an isolated RC deployment; no final RC version/commit/revision has been recorded. | High | BLOCKED — existing workflow deploys `main` to `habit-tracker` with 100% traffic. | Obtain approval for isolated existing target or billable RC resources; then deploy and record digest/revision, smoke and user journey. | Chayanit |
+| OP-01 / OP-02 | RC deployment traceability and authenticated smoke | Current pipeline evidence is not an isolated RC deployment; no final RC version/commit/revision has been recorded. | High | BLOCKED — existing workflow deploys `main` to `habit-tracker` with 100% traffic; an existing RC target cannot be confirmed without GCP access. | Obtain approval for a verified isolated target or a USD $10/24–48h RC budget; then deploy and record digest/revision, smoke and user journey. | Chayanit |
 
 ## Decision rules
 
 - Do not implement any debt item merely to close this register without an approved scope change.
 - Priorities describe risk and verification urgency, not a promise to deploy a feature.
 - Review this register with the final UAT/RC evidence; leave unverified items OPEN or INCOMPLETE.
+
+## Review note — 28 November 2026
+
+`npm audit --omit=dev --json` reported **0 production-dependency vulnerabilities** (150 production dependencies). The `npm ci` advisory count for development tooling does not by itself establish a deployed application vulnerability; track any future production audit finding under this register before changing dependency versions.

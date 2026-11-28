@@ -10,6 +10,7 @@
 2. Start with a clean browser profile/incognito window per role. Do not record passwords or cookie values.
 3. For each case, write PASS, FAIL, BLOCKED or NOT RUN plus a short observation. A planned case is not a PASS.
 4. Capture only redacted screenshots: no credentials, tokens, cookies, connection strings, or private activity data.
+5. Run UAT only after the RC evidence record contains the observed URL, revision, digest, and a successful authenticated smoke result. Otherwise mark the affected case BLOCKED.
 
 | ID | Role / setup | UAT action and expected outcome | Result / evidence (tester completes) |
 |---|---|---|---|
