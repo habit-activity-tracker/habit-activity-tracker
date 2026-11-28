@@ -40,9 +40,32 @@ The repository records a retained isolated restore target, `habit-tracker-restor
 
 This workstation has neither the `gcloud` CLI nor a Google Cloud identity configured, so it cannot safely enumerate existing Cloud Run/Cloud SQL resources. No existing complete RC environment can therefore be confirmed from available evidence.
 
-If creation is approved, the minimum isolated set is: one scale-to-zero Cloud Run RC service, one RC migration job, one dedicated least-privilege service account, RC-only Secret Manager values, and either a confirmed separate Cloud SQL target or a new smallest PostgreSQL instance/database. Artifact Registry may reuse the existing repository while using an immutable candidate tag; production service, database, secrets, job, and traffic must remain untouched.
+If creation is approved, use this exact isolated naming set in the same project (not the production names):
 
-For a short 24–48 hour UAT window, request a **USD $10 maximum budget** before creation. Cloud Run request-based services charge for active CPU/memory/request time and can scale to zero; Cloud SQL is the likely dominant hourly cost, with storage, backups and any egress additional. This is a conservative planning cap, not a quoted price: final cost depends on the selected `asia-southeast1` tier, storage, backup and actual request use. Confirm the configuration in the [Google Cloud pricing calculator](https://cloud.google.com/products/calculator) before creation; see the official [Cloud Run pricing](https://cloud.google.com/run/pricing) and [Cloud SQL pricing](https://cloud.google.com/sql/pricing) pages.
+| Resource | Approved-to-create RC name | Isolation rule |
+|---|---|---|
+| Cloud Run service | `habit-tracker-rc-20261128` | Never `habit-tracker`; scale-to-zero, maximum one instance. |
+| Migration / seed jobs | `habit-tracker-rc-migrate-20261128`, `habit-tracker-rc-seed-20261128` | Separate jobs, connected only to the RC SQL instance. |
+| Cloud SQL / database / user | `habit-tracker-rc-pg-20261128` / `habit_tracker_rc` / `habit_tracker_rc_app` | New instance; do not use `habit-tracker-pg` or `habit-tracker-restore-check-20261127`. |
+| Runtime identity | `habit-tracker-rc-runner-20261128` | Cloud SQL Client plus per-secret access only. |
+| Secret Manager | `habit-tracker-rc-20261128-{database-url,session-secret,demo-password}` | New generated values; secret names and values must not be copied from production. |
+| Image | Existing `habit-tracker` Artifact Registry repository, candidate's immutable digest | Reuse of an image repository is safe; service, SQL and secrets remain RC-only. |
+
+### Planning cost estimate — 24 to 48 hours
+
+This is an estimate, not an invoice. Assumptions are a PostgreSQL 16 Enterprise `db-f1-micro` single-zone instance, 10 GB SSD, no automated backup retained beyond the test, no meaningful internet egress, one Cloud Run service at minimum instances zero / maximum one, a small number of UAT requests, and one Cloud Build image build. Exact regional rates and any account credits/free tiers must be confirmed in the pricing calculator before approval.
+
+| Item | 24-hour planning range (USD) | 48-hour planning range (USD) | Notes |
+|---|---:|---:|---|
+| Cloud SQL instance compute | 0.25–0.36 | 0.50–0.72 | Dominant cost; the published small-instance reference rate is about USD 0.0105/hour, but regional/tier availability must be confirmed. |
+| Cloud SQL 10 GB SSD and short backup retention | 0.06–0.12 | 0.11–0.24 | Pro-rated storage; backup or retained data can increase it. |
+| Cloud Run service and two short jobs | 0.00–0.20 | 0.00–0.30 | Normally within free/request-based use for a short UAT; not guaranteed if free tier is unavailable or load is high. |
+| Artifact Registry image storage | 0.00–0.05 | 0.00–0.05 | First 0.5 GiB-month is free; keeping the image longer may bill storage. |
+| Secret Manager (three new active versions) | 0.00 | 0.00 | Active versions up to six months are currently free; access operations have a free allowance. |
+| Cloud Build | 0.00–0.20 | 0.00–0.20 | Depends on build duration and any remaining free build-minutes. |
+| **Expected subtotal** | **0.31–0.93** | **0.61–1.51** | Excludes unexpected egress, retries, logs beyond free allocation, or retained resources. |
+
+Approve a **USD 10 maximum budget** to cover the stated uncertainty, but delete the RC SQL instance promptly after evidence capture: its compute charge continues while it exists. Cloud Run can scale to zero, but retained SQL, Artifact Registry images, secret versions, backups, and logs can continue to accrue storage charges. Pricing references: [Cloud SQL](https://cloud.google.com/sql/pricing), [Cloud Run](https://cloud.google.com/run/pricing), [Artifact Registry](https://cloud.google.com/artifact-registry/pricing), and [Secret Manager](https://cloud.google.com/secret-manager/pricing).
 
 After approval, record the actual values below; do not fill them from a planned command:
 
@@ -80,41 +103,122 @@ After approval, record the actual values below; do not fill them from a planned 
 
 ## Cloud Shell runbook — execute only after approval
 
-The commands below are deliberately incomplete until an operator provides the approved non-production values. They do not create a service, job, database, secret, or image. Do not substitute `habit-tracker`, `habit-tracker-migrate`, `habit-tracker-pg`, or any production credential/database identifier.
+This is a prepared plan, **not evidence of execution**. Steps 1–2 are read-only. Steps 3–7 create billable resources and require explicit approval and a budget confirmation. Do not substitute `habit-tracker`, `habit-tracker-migrate`, `habit-tracker-pg`, `habit-tracker-restore-check-20261127`, or a production credential/database identifier.
 
 ```sh
 git clone https://github.com/habit-activity-tracker/habit-activity-tracker.git
 cd habit-activity-tracker
-git fetch origin d3-staging
-git checkout 3bb7830c44785841ee490dd0eb10a6431cd82d69
+git fetch origin docs/d3-uat-defects d3-staging
+git checkout docs/d3-uat-defects
 
-# Set only approved isolated-target values; do not paste secrets into shell history.
-export PROJECT_ID='APPROVED_NON_PRODUCTION_PROJECT'
+export PROJECT_ID='cpe334-sec31-ctrl-c-chaya-lab'
 export REGION='asia-southeast1'
-export RC_SERVICE_NAME='APPROVED_RC_SERVICE'
-export RC_MIGRATE_JOB_NAME='APPROVED_RC_MIGRATION_JOB'
+export RC_SUFFIX='20261128'
+export RC_SERVICE_NAME="habit-tracker-rc-${RC_SUFFIX}"
+export RC_MIGRATE_JOB_NAME="habit-tracker-rc-migrate-${RC_SUFFIX}"
+export RC_SEED_JOB_NAME="habit-tracker-rc-seed-${RC_SUFFIX}"
+export RC_SQL_INSTANCE="habit-tracker-rc-pg-${RC_SUFFIX}"
+export RC_DATABASE='habit_tracker_rc'
+export RC_DB_USER='habit_tracker_rc_app'
+export RC_SA_NAME="habit-tracker-rc-runner-${RC_SUFFIX}"
+export RC_SA_EMAIL="${RC_SA_NAME}@${PROJECT_ID}.iam.gserviceaccount.com"
+export RC_DATABASE_SECRET="habit-tracker-rc-${RC_SUFFIX}-database-url"
+export RC_SESSION_SECRET="habit-tracker-rc-${RC_SUFFIX}-session-secret"
+export RC_DEMO_PASSWORD_SECRET="habit-tracker-rc-${RC_SUFFIX}-demo-password"
 export GIT_COMMIT_SHA='3bb7830c44785841ee490dd0eb10a6431cd82d69'
-export RC_IMAGE_DIGEST='APPROVED_ARTIFACT_REGISTRY_IMAGE@sha256:REPLACE'
 export CONFIRM_RC_TARGET='RC-ISOLATED'
 
-# Read-only identity/target checks. Confirm the service/job configuration refers
-# only to the approved RC database secrets before continuing.
+# Step 1 — read-only identity/project checks. Stop if the project is not exact.
 gcloud auth list
-gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION"
-gcloud run jobs describe "$RC_MIGRATE_JOB_NAME" --project="$PROJECT_ID" --region="$REGION"
+gcloud config set project "$PROJECT_ID"
+test "$(gcloud config get-value project)" = "$PROJECT_ID"
+gcloud projects describe "$PROJECT_ID" --format='value(projectId)'
+for selected in "$RC_SERVICE_NAME" "$RC_MIGRATE_JOB_NAME" "$RC_SQL_INSTANCE"; do for protected in habit-tracker habit-tracker-migrate habit-tracker-pg habit-tracker-restore-check-20261127; do test "$selected" != "$protected" || { echo 'protected name selected'; exit 2; }; done; done
 
-# This is the first mutating command: it updates/executes only the RC job/service.
-bash deploy/rc-release.sh
-export RC_SERVICE_URL="$(gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='value(status.url)')"
+# Step 2 — read-only absence check: stop if these RC names already exist.
+gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" && exit 2 || true
+gcloud sql instances describe "$RC_SQL_INSTANCE" --project="$PROJECT_ID" && exit 2 || true
 ```
 
-After the script prints the URL/revision/digest, retain those values and run the smoke check with RC-only credentials supplied through a secure terminal mechanism (not committed and not echoed):
+### Provisioning steps — explicit approval and budget required
 
 ```sh
-export SMOKE_EMAIL='RC_TEST_ACCOUNT_EMAIL'
-read -rs SMOKE_PASSWORD
-python3 deploy/smoke_test.py "$RC_SERVICE_URL"
-unset SMOKE_PASSWORD SMOKE_EMAIL
+# Step 3 — enable APIs if necessary; then create the dedicated RC identity.
+gcloud services enable run.googleapis.com sqladmin.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com secretmanager.googleapis.com iam.googleapis.com --project="$PROJECT_ID"
+gcloud iam service-accounts create "$RC_SA_NAME" --display-name='Habit Tracker isolated RC runtime' --project="$PROJECT_ID"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:${RC_SA_EMAIL}" --role='roles/cloudsql.client' --condition=None --quiet
+
+# Step 4 — create a NEW smallest RC PostgreSQL instance and isolated database.
+# Do not configure authorised networks; Cloud Run connects using Cloud SQL.
+gcloud sql instances create "$RC_SQL_INSTANCE" --database-version=POSTGRES_16 --edition=enterprise --tier=db-f1-micro --region="$REGION" --storage-size=10GB --storage-type=SSD --no-storage-auto-increase --backup-start-time=03:00 --project="$PROJECT_ID"
+gcloud sql databases create "$RC_DATABASE" --instance="$RC_SQL_INSTANCE" --project="$PROJECT_ID"
+gcloud sql instances describe "$RC_SQL_INSTANCE" --project="$PROJECT_ID" --format='yaml(name,region,databaseVersion,settings.tier,settings.dataDiskSizeGb,settings.ipConfiguration.authorizedNetworks)'
+
+# Step 5 — generate RC-only values privately. Do not echo, commit, or retrieve
+# any production secret. The SQL CLI needs a password argument; read prevents
+# shell-history exposure, so run only in a private Cloud Shell terminal.
+read -rs -p 'New RC database password: ' RC_DB_PASSWORD; echo
+gcloud sql users create "$RC_DB_USER" --instance="$RC_SQL_INSTANCE" --password="$RC_DB_PASSWORD" --project="$PROJECT_ID"
+for secret in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do gcloud secrets create "$secret" --replication-policy=automatic --project="$PROJECT_ID"; done
+export RC_SQL_CONNECTION_NAME="${PROJECT_ID}:${REGION}:${RC_SQL_INSTANCE}"
+printf '%s' "postgresql://${RC_DB_USER}:${RC_DB_PASSWORD}@localhost/${RC_DATABASE}?host=/cloudsql/${RC_SQL_CONNECTION_NAME}" | gcloud secrets versions add "$RC_DATABASE_SECRET" --data-file=- --project="$PROJECT_ID"
+openssl rand -hex 32 | tr -d '\n' | gcloud secrets versions add "$RC_SESSION_SECRET" --data-file=- --project="$PROJECT_ID"
+openssl rand -base64 18 | tr -d '/+=\n' | cut -c1-16 | { read -r p; printf '%sAa1' "$p"; } | gcloud secrets versions add "$RC_DEMO_PASSWORD_SECRET" --data-file=- --project="$PROJECT_ID"
+unset RC_DB_PASSWORD
+for secret in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do gcloud secrets add-iam-policy-binding "$secret" --member="serviceAccount:${RC_SA_EMAIL}" --role='roles/secretmanager.secretAccessor' --project="$PROJECT_ID" --quiet; done
+
+# Step 6 — build the candidate and resolve its immutable digest.
+export IMAGE_URI="${REGION}-docker.pkg.dev/${PROJECT_ID}/habit-tracker/habit-tracker:${GIT_COMMIT_SHA}"
+gcloud builds submit --tag="$IMAGE_URI" --project="$PROJECT_ID"
+export RC_IMAGE_DIGEST="$(gcloud artifacts docker images describe "$IMAGE_URI" --format='value(image_summary.digest)' --project="$PROJECT_ID")"
+test -n "$RC_IMAGE_DIGEST"
+export RC_IMAGE_DIGEST="${REGION}-docker.pkg.dev/${PROJECT_ID}/habit-tracker/habit-tracker@${RC_IMAGE_DIGEST}"
 ```
 
-`deploy/smoke_test.py` runs authenticated checks whenever both smoke variables are present. If either credential is unavailable, stop and record the smoke test as BLOCKED rather than accepting an unauthenticated-only result.
+```sh
+# Step 7 — create jobs/service wired ONLY to isolated SQL and secret names.
+export RC_SECRETS="DATABASE_URL=${RC_DATABASE_SECRET}:latest,SESSION_SECRET=${RC_SESSION_SECRET}:latest,SEED_DEMO_PASSWORD=${RC_DEMO_PASSWORD_SECRET}:latest"
+export RC_ENV="NODE_ENV=production,APP_ENV=rc,APP_TIMEZONE=Asia/Bangkok,SESSION_TTL=24,GIT_COMMIT_SHA=${GIT_COMMIT_SHA}"
+gcloud run jobs deploy "$RC_MIGRATE_JOB_NAME" --image="$RC_IMAGE_DIGEST" --region="$REGION" --service-account="$RC_SA_EMAIL" --set-cloudsql-instances="$RC_SQL_CONNECTION_NAME" --set-secrets="$RC_SECRETS" --set-env-vars="$RC_ENV" --command=node --args=api/dist/src/db/migrate.js --max-retries=1 --task-timeout=300s --project="$PROJECT_ID"
+gcloud run jobs deploy "$RC_SEED_JOB_NAME" --image="$RC_IMAGE_DIGEST" --region="$REGION" --service-account="$RC_SA_EMAIL" --set-cloudsql-instances="$RC_SQL_CONNECTION_NAME" --set-secrets="$RC_SECRETS" --set-env-vars="$RC_ENV" --command=node --args=api/dist/src/seed/seed.js --max-retries=0 --task-timeout=300s --project="$PROJECT_ID"
+gcloud run deploy "$RC_SERVICE_NAME" --image="$RC_IMAGE_DIGEST" --region="$REGION" --allow-unauthenticated --service-account="$RC_SA_EMAIL" --add-cloudsql-instances="$RC_SQL_CONNECTION_NAME" --set-secrets="$RC_SECRETS" --set-env-vars="$RC_ENV" --min-instances=0 --max-instances=1 --memory=512Mi --cpu=1 --port=3000 --project="$PROJECT_ID"
+
+# Verify metadata only (names, never secret values), then migrate and seed once.
+gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format=export | grep -E "${RC_SA_EMAIL}|${RC_SQL_CONNECTION_NAME}|${RC_DATABASE_SECRET}|${RC_SESSION_SECRET}|${RC_DEMO_PASSWORD_SECRET}"
+gcloud run jobs describe "$RC_MIGRATE_JOB_NAME" --project="$PROJECT_ID" --region="$REGION" --format=export | grep -E "${RC_SA_EMAIL}|${RC_SQL_CONNECTION_NAME}|${RC_DATABASE_SECRET}|${RC_SESSION_SECRET}|${RC_DEMO_PASSWORD_SECRET}"
+gcloud run jobs execute "$RC_MIGRATE_JOB_NAME" --wait --project="$PROJECT_ID" --region="$REGION"
+gcloud run jobs execute "$RC_SEED_JOB_NAME" --wait --project="$PROJECT_ID" --region="$REGION"
+
+# Step 8 — the guarded script can now update only the pre-verified RC target.
+bash deploy/rc-release.sh
+export RC_SERVICE_URL="$(gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='value(status.url)')"
+curl --fail --silent --show-error "$RC_SERVICE_URL/api/health"
+curl --fail --silent --show-error "$RC_SERVICE_URL/api/ready"
+```
+
+The seed job creates only synthetic `pm1@example.com`, `alice@example.com`, and `bob@example.com` accounts in the **new RC database**, with the newly generated RC demo-password secret. These accounts share no database, session secret, password value, or session state with production. Read the RC password privately only when an independent tester needs it; do not record it in evidence.
+
+### Smoke, evidence and cleanup
+
+```sh
+# Run only with an RC synthetic account; never paste its password into a command.
+export SMOKE_EMAIL='pm1@example.com'
+read -rs -p 'RC demo password: ' SMOKE_PASSWORD; echo
+export EXPECTED_COMMIT_SHA="$GIT_COMMIT_SHA"
+python3 deploy/smoke_test.py "$RC_SERVICE_URL"
+unset SMOKE_PASSWORD SMOKE_EMAIL
+
+# Record only URL, full SHA, digest, revision, traffic and redacted PASS/FAIL.
+gcloud run services describe "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --format='yaml(status.url,status.latestReadyRevisionName,status.traffic)'
+
+# Cleanup after UAT/evidence approval. These are destructive RC-only commands;
+# re-check every variable before executing. Delete SQL last after evidence capture.
+gcloud run services delete "$RC_SERVICE_NAME" --project="$PROJECT_ID" --region="$REGION" --quiet
+gcloud run jobs delete "$RC_MIGRATE_JOB_NAME" --project="$PROJECT_ID" --region="$REGION" --quiet
+gcloud run jobs delete "$RC_SEED_JOB_NAME" --project="$PROJECT_ID" --region="$REGION" --quiet
+gcloud sql instances delete "$RC_SQL_INSTANCE" --project="$PROJECT_ID" --quiet
+for secret in "$RC_DATABASE_SECRET" "$RC_SESSION_SECRET" "$RC_DEMO_PASSWORD_SECRET"; do gcloud secrets delete "$secret" --project="$PROJECT_ID" --quiet; done
+gcloud iam service-accounts delete "$RC_SA_EMAIL" --project="$PROJECT_ID" --quiet
+```
+
+Never delete the Artifact Registry candidate image until the review/evidence-retention decision is made; it may incur a small storage charge. After that decision, delete only the RC candidate digest, never a shared production tag.
