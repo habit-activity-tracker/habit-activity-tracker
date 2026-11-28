@@ -55,6 +55,8 @@ If creation is approved, use this exact isolated naming set in the same project 
 
 This is an estimate, not an invoice. Assumptions are a PostgreSQL 16 Enterprise `db-f1-micro` single-zone instance, 10 GB SSD, no automated backup retained beyond the test, no meaningful internet egress, one Cloud Run service at minimum instances zero / maximum one, a small number of UAT requests, and one Cloud Build image build. Exact regional rates and any account credits/free tiers must be confirmed in the pricing calculator before approval.
 
+**Pre-provisioning pricing check (28 November 2026):** the current official Cloud SQL shared-core reference price for `db-f1-micro` is USD 0.0105/hour and SSD capacity is USD 0.000232877/GiB-hour. At 48 hours, these two known components are about USD 0.504 + USD 0.112 for the planned 10 GiB disk; allowing a full 10 GiB backup adds about USD 0.053 at the published backup rate. The RC plan therefore remains below the USD 10 authorization even after its stated allowance for Cloud Run, Cloud Build and image storage. This check does not expose or read project billing data. The Cloud Shell operator must stop before creation if the signed-in pricing calculator, selected tier/region, quota, or required extra resource changes this scope.
+
 | Item | 24-hour planning range (USD) | 48-hour planning range (USD) | Notes |
 |---|---:|---:|---|
 | Cloud SQL instance compute | 0.25–0.36 | 0.50–0.72 | Dominant cost; the published small-instance reference rate is about USD 0.0105/hour, but regional/tier availability must be confirmed. |
