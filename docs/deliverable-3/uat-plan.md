@@ -14,17 +14,17 @@
 
 | ID | Role / setup | UAT action and expected outcome | Result / evidence (tester completes) |
 |---|---|---|---|
-| UAT-01 | Anonymous | Open `/api/health`, `/api/ready`, and the UI. Expect health/ready 200 and the login UI. | NOT RUN |
-| UAT-02 | Participant | Log in with supplied RC participant account; confirm the displayed current user/role and log out. After logout, protected page/API requires login. | NOT RUN |
-| UAT-03 | Program Manager | Create an active template with an agreed test name/range; confirm a participant cannot create or edit it. | NOT RUN |
-| UAT-04 | Participant | Browse active templates; create a goal with a valid period-total target and valid dates. Confirm it appears only in the participant's list. | NOT RUN |
-| UAT-05 | Participant | Create a daily record at the template minimum or maximum; try a duplicate same goal/date and confirm rejection without changing the first value. | NOT RUN |
-| UAT-06 | Participant | Verify record-date boundaries: today and seven days ago are accepted when inside the goal period; day eight ago and future/out-of-period dates are rejected. | NOT RUN |
-| UAT-07 | Second participant and manager | Attempt to read the first participant's goal/history/progress/revisions/reminders. Expect safe denial (manager 403, other participant 404) and no private data. | NOT RUN |
-| UAT-08 | Participant | View progress/history; confirm displayed progress is capped at 100% and records belong to the selected goal. | NOT RUN |
-| UAT-09 | Participant | Use Revise goal to change permitted target/end date; confirm revision appears in history and existing daily records remain visible. | NOT RUN |
-| UAT-10 | Participant | Create up to three reminder schedules with valid time/weekdays; confirm next occurrence is future in Bangkok time. A fourth schedule is rejected; no notification is expected. | NOT RUN |
-| UAT-11 | Participant | Trigger one safe validation error (for example invalid numeric/date field) and confirm a user-safe error is shown; browser workflow remains usable. | NOT RUN |
+| UAT-01 | Anonymous | Open `/api/health`, `/api/ready`, and the UI. Expect health/ready 200 and the login UI. | **PASS** — Kulchaya, 28 November 2026 ICT. `/api/health` returned HTTP 200 with commit `3bb7830c44785841ee490dd0eb10a6431cd82d69`; `/api/ready` returned HTTP 200; UI root returned HTTP 200. Console output recorded in the Issue 7 evidence/PR thread. |
+| UAT-02 | Participant | Log in with supplied RC participant account; confirm the displayed current user/role and log out. After logout, protected page/API requires login. | **PASS** - Alice showed Participant; logout redirected to login and `/api/auth/me` returned HTTP 401. |
+| UAT-03 | Program Manager | Create an active template with an agreed test name/range; confirm a participant cannot create or edit it. | **PASS** - PM created the RC test template; Alice had no create/edit controls and was redirected to the participant page. |
+| UAT-04 | Participant | Browse active templates; create a goal with a valid period-total target and valid dates. Confirm it appears only in the participant's list. | **PASS** - Alice created the goal with HTTP 201; Bob did not see Alice's goal. |
+| UAT-05 | Participant | Create a daily record at the template minimum or maximum; try a duplicate same goal/date and confirm rejection without changing the first value. | **PASS** - Record creation returned 201; duplicate returned 409 and the original quantity remained unchanged. |
+| UAT-06 | Participant | Verify record-date boundaries: today and seven days ago are accepted when inside the goal period; day eight ago and future/out-of-period dates are rejected. | **PASS** - Today and day -7 returned 201; day -8 and tomorrow returned 400. |
+| UAT-07 | Second participant and manager | Attempt to read the first participant's goal/history/progress/revisions/reminders. Expect safe denial (manager 403, other participant 404) and no private data. | **PASS** - Bob received 404 `GOAL_NOT_FOUND`; PM received 403 `ROLE_FORBIDDEN`; no private data was exposed. |
+| UAT-08 | Participant | View progress/history; confirm displayed progress is capped at 100% and records belong to the selected goal. | **PASS** - Progress displayed 100.0% capped, and history contained only the selected goal's record. |
+| UAT-09 | Participant | Use Revise goal to change permitted target/end date; confirm revision appears in history and existing daily records remain visible. | **PASS** - `Revise goal` was visible; revision returned 201, changed Version 1 to Version 2, preserved the existing record, and displayed revision history. |
+| UAT-10 | Participant | Create up to three reminder schedules with valid time/weekdays; confirm next occurrence is future in Bangkok time. A fourth schedule is rejected; no notification is expected. | **PASS** - Three reminders were created with future Bangkok-time occurrences; the fourth was rejected and the form was hidden. |
+| UAT-11 | Participant | Trigger one safe validation error (for example invalid numeric/date field) and confirm a user-safe error is shown; browser workflow remains usable. | **PASS** - Invalid target/date values returned HTTP 400 with safe validation messages; the form remained usable after correction. |
 
 ## Completion record
 
@@ -32,8 +32,8 @@
 |---|---|
 | RC URL / Cloud Run revision | `https://habit-tracker-rc-20261128-860543640437.asia-southeast1.run.app` / `habit-tracker-rc-20261128-00001-q7n` |
 | Commit / immutable digest | `3bb7830c44785841ee490dd0eb10a6431cd82d69` / `sha256:2e7ef50448a775fc4ba6c9e908b1af4f952f500364d60ed9263ae9105ef3a69d` |
-| Tester(s) | Not assigned |
-| UAT cases passed / failed / blocked / not run | 0 / 0 / 0 / 11 at document creation |
-| Defects linked | None — no UAT executed |
+| Tester(s) | Kulchaya (UAT-01); Antigravity browser subagent acting for Kulchaya (UAT-02 to UAT-11); 28 November 2026 ICT |
+| UAT cases passed / failed / blocked / not run | 11 / 0 / 0 / 0 |
+| Defects linked | None found in UAT-01 to UAT-11 |
 
 The RC evidence record is `docs/evidence/d3/issue-7-rc-deploy.md`; technical-debt decisions are in `technical-debt.md`. Testers must not infer a result from automated evidence or from this plan.

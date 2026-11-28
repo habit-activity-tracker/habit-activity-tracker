@@ -67,3 +67,45 @@ Remaining Issue #133 work:
 4. Run the documented RC-only cleanup after UAT and evidence retention approval.
 
 The provision plan is retained in [rc-cloud-shell-provisioning.md](rc-cloud-shell-provisioning.md). It is a plan, not a claim that every planned command was used in the actual deployment.
+
+## Independent UAT evidence
+
+### UAT-01 — Anonymous health, readiness, and UI
+
+- **Tester:** Kulchaya
+- **Date:** 28 November 2026 (Asia/Bangkok)
+- **Revision:** `habit-tracker-rc-20261128-00001-q7n`
+- **Source commit:** `3bb7830c44785841ee490dd0eb10a6431cd82d69`
+- **Method:** PowerShell `Invoke-WebRequest`; no credentials, cookies, or secrets used
+
+| Request | Result |
+|---|---|
+| `GET /api/health` | HTTP 200; `{"status":"ok","commit":"3bb7830c44785841ee490dd0eb10a6431cd82d69"}` |
+| `GET /api/ready` | HTTP 200; `{"status":"ready"}` |
+| `GET /` | HTTP 200; web application HTML returned |
+
+**UAT-01 result: PASS.** UAT-02 through UAT-11 are recorded below.
+
+### UAT-02 to UAT-11 — Independent browser UAT
+
+- **Tester:** Antigravity browser subagent acting for Kulchaya
+- **Date:** 28 November 2026 (Asia/Bangkok)
+- **Origin verified:** `https://habit-tracker-rc-20261128-860543640437.asia-southeast1.run.app`
+- **Revision:** `habit-tracker-rc-20261128-00001-q7n`
+- **Source commit:** `3bb7830c44785841ee490dd0eb10a6431cd82d69`
+- **Evidence:** redacted browser evidence; final revision screenshot `final_step_121.png`
+
+| ID | Result | Observation |
+|---|---|---|
+| UAT-02 | PASS | Alice login displayed Participant; logout redirected to login and protected `/api/auth/me` returned 401. |
+| UAT-03 | PASS | PM created the active test template; Alice had no create/edit controls. |
+| UAT-04 | PASS | Alice created a goal with HTTP 201; Bob did not see it. |
+| UAT-05 | PASS | Record creation succeeded; duplicate returned 409 and the original quantity was unchanged. |
+| UAT-06 | PASS | Today and day -7 returned 201; day -8 and tomorrow returned 400. |
+| UAT-07 | PASS | Bob received 404 `GOAL_NOT_FOUND`; PM received 403 `ROLE_FORBIDDEN`; no private data leaked. |
+| UAT-08 | PASS | Progress capped at 100%; history was scoped to the selected goal. |
+| UAT-09 | PASS | `Revise goal` was visible; revision returned 201, showed Version 2, preserved the existing record, and displayed revision history. |
+| UAT-10 | PASS | Three reminders were created with future Bangkok-time occurrences; the fourth was rejected. |
+| UAT-11 | PASS | Invalid target/date values returned HTTP 400 with safe messages; the form remained usable. |
+
+**UAT-02 to UAT-11 result: PASS.** No new defect was found. The earlier run against `habit-tracker-tn5ktplddq-as.a.run.app` was not used as RC evidence because that origin is the Lab 5 production service, not this RC.
